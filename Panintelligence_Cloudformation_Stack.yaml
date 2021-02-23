@@ -32,6 +32,9 @@ Parameters:
   AMIID:
    Type: String
    Description: Please enter your AMI ID that you recieved from market place subscriptions.
+  KeyPairName:
+   Type: String
+   Description: Please enter your key pair that you have created
 Resources:
   VPC:
     Type: 'AWS::EC2::VPC'
@@ -411,6 +414,6 @@ Resources:
       InstanceType: t3.medium
       SecurityGroupIds: 
         - !Ref PrivateSecurityGroup
-      KeyName: panintelligence_key_pair
+      KeyName: !Ref KeyPairName
       SubnetId: !Ref PrivateSubnetA
       
