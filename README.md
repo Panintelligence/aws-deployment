@@ -36,12 +36,12 @@ Once you have the prerequisites done, we can deploy the stack.
 
 ## Cloudformation 
 
-- Download this cloudformation stack:[panintelligence_cloudformation_stack.yaml](/cloud/cloudformation/panintelligence_cloudformation_stack.yaml)
+- Download this cloudformation stack:[panintelligence_cloudformation_stack.yaml](/images/panintelligence_cloudformation_stack.yaml)
 
 - Go to AWS console and search for "Cloudformation" and click on "Create stack" on your right:
-![cloudform.png](/cloud/cloudformation/cloudform.png)
+![cloudform.png](/images/cloudform.png)
 - Ensure that "Template is ready" and to specify template you will be uploading the panintelligence cloudformation file. Click next.
-![cloudformation_upload.png](/cloud/cloudformation/cloudformation_upload.png)
+![cloudformation_upload.png](/images/cloudformation_upload.png)
 
 - Here you will need to enter these parameters values  and stack name to complete the build:
 	- ACMCertArn = The ACM certificate that you have created, you will need to obtain that from "certificate manager to get the arn for that particular certificate.
@@ -54,17 +54,17 @@ Once you have the prerequisites done, we can deploy the stack.
   - PublicACidrBlock = One of the public cidr blocks that is in availbility zone A
   - PublicBCidrBlock = One of the public cidr blocks that is in availbility zone B
   - VPCCidrBlock = The cidr block for the VPC
-![cloudstackparam.png](/cloud/cloudformation/cloudstackparam.png)
+![cloudstackparam.png](/images/cloudstackparam.png)
 
 - Click Next and Click Next again.
 - Ensure that you enable "capabilities" and click "create stack".
-![endofstack.png](/cloud/cloudformation/endofstack.png)
+![endofstack.png](/images/endofstack.png)
 
 - Wait for the stack to complete the build. Refresh until it is built:
-![waitingforstack.png](/waitingforstack.png)
+![waitingforstack.png](/images/waitingforstack.png)
 
 - Go to your EC2 console and go to loadbalancer and copy the DNS name and paste it into your browser:
-![finish.png](/finish.png)
+![finish.png](/images/finish.png)
 
 - Congratulations, you are now ready to expriment with your data and bring your data to life! 
 
@@ -78,9 +78,9 @@ Type the subdomain you want to use in the Name field.
 Make sure the Type selected is A - IPv4 address and Alias is set to Yes.
 
 In the Alias Target field, start typing the name of the load balancer and select it when it appears.
-![alias_target_dropdown.png](/cloud/cloudformation/alias_target_dropdown.png)
+![alias_target_dropdown.png](/images/alias_target_dropdown.png)
 
 You should now be able to access the dashboard at the domain you configure in the Route 53 record (the DNS entry can sometimes take a little bit to propagate if it doesn't work immediately).
 
 ## Infrastructure Diagram
-![diagram.png](/cloud/cloudformation/diagram.png)
+![diagram.png](/imagescloud/cloudformation/diagram.png)
