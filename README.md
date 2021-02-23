@@ -29,10 +29,10 @@ Once you have the prerequisites done, we can deploy the stack.
 ![manage_sub.png](/cloud/cloudformation/manage_sub.png)
 
 - Click on to launch instance to your right:
-![marketplace.png](/cloud/cloudformation/marketplace.png)
+![marketplace.png](/images/marketplace.png)
 
 - Depending on what region you wish to deploy it in, please select the region and below the AMI ID will change. Please copy that AMI ID and keep that safe:
-![marketplace_amiid.png](/cloud/cloudformation/marketplace_amiid.png)
+![marketplace_amiid.png](/images/marketplace_amiid.png)
 
 ## Cloudformation 
 
