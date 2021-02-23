@@ -82,5 +82,67 @@ In the Alias Target field, start typing the name of the load balancer and select
 
 You should now be able to access the dashboard at the domain you configure in the Route 53 record (the DNS entry can sometimes take a little bit to propagate if it doesn't work immediately).
 
+## Logging into the dashboard
+Follow the link https://<your dashboard public address>:8224 to access your new dashboard.
+
+Upon initial login to the dashboard, you will require a username and password. These are:
+
+Username : admin
+Password : <your AWS EC2 Instance ID>
+BYOL Only: Obtaining and installing your licence
+If you're using the BYOL listing from the marketplace, you will need to install your licence. Please reach out to your account manager for your licence file.
+
+Please log into your instance using ec2-user
+Copy your licence to your instance
+Execute: sudo su - pi-user
+copy your licence to /opt/pi/Dashboard/tomcat/webapps/panLicenceManager/WEB-INF/classes
+Your licence file should be called licence.xml
+## Deploy Version:Auto Scaling group
+In order to
+
+Administrative Considerations
+If you followed our recommended setup above, you will need to configure a bastion host for SSH access to the instance as it is in a private subnet.
+
+By default, the ec2-user account can be used to access your deployed AMI image. As part of the stand up, you should have defined a key value pair, please use this when logging in under ssh security
+
+## Logs
+Log into the deployed AMI using the ec2-user account.
+The dashboard application runs as pi-user. you can log in as that user by running
+```
+sudo -u pi-user -i
+```
+Logs are stored under /opt/pi/Dashboard/tomcat/logs/
+There are no housekeeping rules set on this folder as default, you may wish to add your own.
+
+## Restarting the Dashboard
+To restart the dashboard, please execute:
+```
+sudo -u pi-user -i
+/opt/pi/Dashboard/dashboard.sh all stop
+Verify the services have stopped /opt/pi/Dashboard/dashboard.sh all status
+/opt/pi/Dashboard/dashboard.sh all start
+```
+You may verify the the service has restarted /opt/pi/Dashboard/dashboard.sh all status
+
+## Upgrading/backing up the panintelligence dashboard
+Please follow these steps when you wish to migrate your panintelligence to a new version of the software which we release regularly or if you wish to upgrade to the developer path (as found in the Marketplace)
+
+We have created 2 scripts for you. They back up key resources which, when applied to a fresh install, will bring all of your changes.
+
+Log into the deployed AMI instance using the ec2-user account.
+initiate the backup
+```
+sudo -u pi-user -i
+/opt/pi/Dashboard/s3_backup.sh --s3-bucket=<your s3 bucket name>
+```
+restore your backup on a new host
+Please stop the dashboard prior to running these steps (please see restarting the dashboard)
+```
+sudo -u pi-user -i
+/opt/pi/Dashboard/s3_restore.sh --s3-bucket=<your s3 bucket name> --zip-file=<specify path in s3>
+```
+If no zip-file option is presented, the restore routine will use the latest backup.
+After you've copied the files across to your new host, you can start the dashboard. The database will automatically align to the latest version of the software.
+
 ## Infrastructure Diagram
 ![diagram.png](/images/diagram.png)
