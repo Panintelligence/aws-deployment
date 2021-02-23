@@ -83,4 +83,4 @@ In the Alias Target field, start typing the name of the load balancer and select
 You should now be able to access the dashboard at the domain you configure in the Route 53 record (the DNS entry can sometimes take a little bit to propagate if it doesn't work immediately).
 
 ## Infrastructure Diagram
-![diagram.png](/imagescloud/cloudformation/diagram.png)
+![diagram.png](/images/diagram.png)
