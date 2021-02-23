@@ -15,10 +15,10 @@ Once you have the prerequisites done, we can deploy the stack.
 
 ### Obtain the panintelligence AMI ID
 - Go on to AWS console and search for "AWS marketplace subscriptions":
-![marketplace_search.png](/cloud/cloudformation/marketplace_search.png)
+![marketplace_search.png](/images/marketplace_search.png)
 
 - Inside the AWS marketplace subscriptions, click on "Discover products" on your left and search for "panintelligence": 
-![marketplace_ami.png](/cloud/cloudformation/marketplace_ami.png)
+![marketplace_ami.png](/images/marketplace_ami.png)
 
 - Select one of the panintelligence products that you wish to use. For this example we will use "Panintelligence BYOL" and select it.
 
