@@ -32,6 +32,9 @@ Parameters:
   AMIID:
    Type: String
    Description: Please enter your AMI ID that you recieved from market place subscriptions.
+  KeyPairName:
+   Type: String
+   Description: Please enter your key pair that you have created
 Resources:
   VPC:
     Type: 'AWS::EC2::VPC'
@@ -203,7 +206,7 @@ Resources:
        RuleNumber: 300
        Protocol: 6
        RuleAction: allow
-       CidrBlock: 10.0.0.0/24
+       CidrBlock: !Ref PrivateCidrBlock
        PortRange:
          From: 1024
          To: 65535
@@ -255,7 +258,7 @@ Resources:
   ApplicationLoadBalancer:
         Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
         Properties:
-            Name: "Panintelligence-ALBr"
+            Name: "Panintelligence"
             Scheme: "internet-facing"
             Type: "application"
             Subnets: 
@@ -270,7 +273,7 @@ Resources:
                 Value: "false"
               - 
                 Key: "idle_timeout.timeout_seconds"
-                Value: "60"
+                Value: "200"
               - 
                 Key: "deletion_protection.enabled"
                 Value: "false"
@@ -318,18 +321,18 @@ Resources:
   TargetGroup:
         Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
         Properties:
-            HealthCheckIntervalSeconds: 30
+            HealthCheckIntervalSeconds: 65
             HealthCheckPath: "/"
             Port: 8224
             Protocol: "HTTP"
             HealthCheckPort: "traffic-port"
             HealthCheckProtocol: "HTTP"
-            HealthCheckTimeoutSeconds: 10
-            UnhealthyThresholdCount: 3
+            HealthCheckTimeoutSeconds: 60
+            UnhealthyThresholdCount: 4
             TargetType: "instance"
             Matcher: 
                 HttpCode: "200,302"
-            HealthyThresholdCount: 3
+            HealthyThresholdCount: 4
             VpcId: !Ref VPC
             Name: "panintelligence"
             HealthCheckEnabled: true
@@ -361,6 +364,7 @@ Resources:
   S3WritableRole:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: Panintelligence-S3-Backup
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -410,6 +414,5 @@ Resources:
       InstanceType: t3.medium
       SecurityGroupIds: 
         - !Ref PrivateSecurityGroup
-      KeyName: panintelligence_key_pair
+      KeyName: !Ref KeyPairName
       SubnetId: !Ref PrivateSubnetA
-      
