@@ -40,7 +40,7 @@ aws cloudformation create-stack --stack-name panintelligence /
 Once the stack is completed. You will need to obtain the DNS name inside the load balancer.
 Please use this command to obtain details:
 ```bash
-aws elb describe-load-balancers --load-balancer-name my-load-balancer
+aws elb describe-load-balancers --load-balancer-name Panintelligence-ALB
 ```
 
 ## Post launch configuration
