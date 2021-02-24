@@ -1,0 +1,70 @@
+[
+  {
+    "ParameterKey": "VPCCidrBlock",
+    "ParameterValue": "10.0.0.0/16"
+  },
+  {
+    "ParameterKey": "PublicACidrBlock",
+    "ParameterValue": "10.0.1.0/24"
+  },
+  {
+    "ParameterKey": "Licence",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "PublicBCidrBlock",
+    "ParameterValue": "10.0.2.0/24"
+  },
+  {
+    "ParameterKey": "PrivateCidrBlock",
+    "ParameterValue": "10.0.0.0/24"
+  },
+  {
+    "ParameterKey": "RDSPublicA",
+    "ParameterValue": "10.0.3.0/24"
+  },
+  {
+    "ParameterKey": "RDSPublicB",
+    "ParameterValue": "10.0.4.0/24"
+  },
+  {
+    "ParameterKey": "AvailabilityZoneA",
+    "ParameterValue": "eu-west-1a"
+  },
+  {
+    "ParameterKey": "AvailabilityZoneB",
+    "ParameterValue": "eu-west-1b"
+  },
+  {
+    "ParameterKey": "RDSUsername",
+    "ParameterValue": "dashboard"
+  },
+  {
+    "ParameterKey": "RDSPassword",
+    "ParameterValue": "dashboard12"
+  },
+  {
+    "ParameterKey": "RDSEngine",
+    "ParameterValue": "mariadb"
+  },
+  {
+    "ParameterKey": "DBInstanceIdentifier",
+    "ParameterValue": "dashboard"
+  },
+  {
+    "ParameterKey": "DBInstanceClass",
+    "ParameterValue": "db.t2.micro"
+  },
+  {
+    "ParameterKey": "ACMCertArn",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "DockerUser",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "DockerPass",
+    "ParameterValue": ""
+  }
+]
