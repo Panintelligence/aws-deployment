@@ -42,3 +42,18 @@ Please use this command to obtain details:
 ```bash
 aws elb describe-load-balancers --load-balancer-name my-load-balancer
 ```
+
+## Post launch configuration
+**Only do this part if you are hosting your domain on AWS Route 53.**
+Finally, we need to create a Route 53 record that aliases to the load balancer.
+
+Navigate to the hosted zone you want to use in Route 53 and create a record set.
+
+Type the subdomain you want to use in the Name field.
+
+Make sure the Type selected is A - IPv4 address and Alias is set to Yes.
+
+In the Alias Target field, start typing the name of the load balancer and select it when it appears.
+![alias_target_dropdown.png](/images/alias_target_dropdown.png)
+
+You should now be able to access the dashboard at the domain you configure in the Route 53 record (the DNS entry can sometimes take a little bit to propagate if it doesn't work immediately).
