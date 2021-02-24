@@ -2,8 +2,10 @@
 
 ## Configuring the parameters
 
+You will need Panintelligence to white list your docker ID and obtain the licence file from Panintelligence. 
+
 Please edit the file "paramters.json" with the correct values. You do not have to change the default values unless you want customise it. In addition, you must input the values for:
-- Licence
+- Licence  (Copy and paste the xml licence file into the parameter value)
 - ACM
 - DockerUser
 - DockerPass
