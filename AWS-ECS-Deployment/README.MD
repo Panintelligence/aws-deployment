@@ -30,9 +30,15 @@ Please edit the file "paramters.json" with the correct values. You do not have t
 
 Once you have configured the parameters. In AWS Cli, please enter this command below and make sure the file paths are correct: 
 
-```
+```bash
 aws cloudformation create-stack --stack-name panintelligence /
 --template-body file://panintelligence-ecs-deploy.yaml /
 --parameters file://parameters.json / 
 --capabilities CAPABILITY_NAMED_IAM
+```
+
+Once the stack is completed. You will need to obtain the DNS name inside the load balancer.
+Please use this command to obtain details:
+```bash
+aws elb describe-load-balancers --load-balancer-name my-load-balancer
 ```
