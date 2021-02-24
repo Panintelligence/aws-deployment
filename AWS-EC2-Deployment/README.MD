@@ -40,6 +40,7 @@ Please edit the file "paramters.json" with the correct values. You do not have t
 - MyS3Bucket
 - ACM
 - AMIID
+- keypairvalue
 
 
 |parameter|description|default value|
