@@ -53,7 +53,7 @@ Please edit the file "paramters.json" with the correct values. You do not have t
 |ACMCertArn| ACM Certificate for port 443|No default value|
 |MyS3Bucket|The name of the created s3 bucket you wish to upload backups| No default Value|
 |AMIID| The AMI ID of the region you wish to use| No default Value| 
-|KeyPairName| The key pem of what you have created| No default value|
+|KeyPairName| The key pem name of what you have created| No default value|
 
 Once you have configured the parameters. In AWS Cli, please enter this command below and make sure the file paths are correct: 
 
