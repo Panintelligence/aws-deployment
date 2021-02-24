@@ -23,6 +23,6 @@ Once you have configured the parameters. In AWS Cli, please enter this command b
 
 ```BASH
 aws cloudformation create-stack --stack-name panintelligence /
---template-body file://panintelligence-ecs-deploy.yaml /
+--template-body file://Panintelligence_Cloudformation_Stack.yaml /
 --parameters file://parameters.json / 
 --capabilities CAPABILITY_NAMED_IAM
