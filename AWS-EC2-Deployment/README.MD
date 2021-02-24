@@ -26,9 +26,10 @@ aws cloudformation create-stack --stack-name panintelligence /
 --template-body file://Panintelligence_Cloudformation_Stack.yaml /
 --parameters file://parameters.json / 
 --capabilities CAPABILITY_NAMED_IAM
-
+```
 Once the stack is completed. You will need to obtain the DNS name inside the load balancer.
 Please use this command to obtain details:
+
 ```BASH
 aws elb describe-load-balancers --load-balancer-name Panintelligence
 ```
