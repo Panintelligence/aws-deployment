@@ -23,10 +23,10 @@ Once you have the prerequisites done, we can deploy the stack.
 - Select one of the panintelligence products that you wish to use. For this example we will use "Panintelligence BYOL" and select it.
 
 - Click on to "Subscribe" or "Continue to Subscribe" and await to confirm subscription.
-![marketplace_sub.png](/cloud/cloudformation/marketplace_sub.png)
+![marketplace_sub.png](/images/marketplace_sub.png)
 
 - Go back to AWS marketplace subscriptions console in AWS and you should see your panintelligence subscription. Click on to your panintelligence subscription:
-![manage_sub.png](/cloud/cloudformation/manage_sub.png)
+![manage_sub.png](/images/manage_sub.png)
 
 - Click on to launch instance to your right:
 ![marketplace.png](/images/marketplace.png)
