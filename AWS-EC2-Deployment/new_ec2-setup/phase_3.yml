@@ -1,0 +1,32 @@
+
+
+
+# Maybe move the target group from phase 1 to phase 3 to add instance as target or have a condition when instance is created  then populate target
+
+ElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref PanintelligenceImage
+
+
+  MyInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      Roles:
+        -
+          Ref: "PanintelligenceRole"
+
+  # Create AMI instance of BYOL panintelligence
+  PanintelligenceImage:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Ref AvailabilityZoneA
+      ImageId: !Ref AMIID
+      InstanceType: t3.medium
+      IamInstanceProfile: !Ref MyInstanceProfile
+      SecurityGroupIds:
+        - !Ref PrivateSecurityGroup
+        - !Ref SecurityGroupEc2Instance
+      KeyName: !Ref KeyPairName
+      SubnetId: !Ref PrivateSubnetA

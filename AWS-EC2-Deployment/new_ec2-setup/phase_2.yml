@@ -1,0 +1,33 @@
+
+
+
+
+
+FileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: !Ref Encryption
+      FileSystemTags:
+        - Key: Name
+          Value: !If [hasFsTags, !Ref FileSystemName, !Sub "${AWS::StackName}FileSystem"]
+      KmsKeyId: !If [useDefaultCMK, !Ref "AWS::NoValue", !Ref KmsKeyId]
+      PerformanceMode: !Ref PerformanceMode
+      ThroughputMode: !Ref ThroughputMode
+      ProvisionedThroughputInMibps: !If [provisionedThroughputMode, !Ref ProvisionedThroughputInMibps, !Ref 'AWS::NoValue']
+
+  MountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId: !Ref MountTarget1Subnet
+      SecurityGroups:
+        - !Ref MountTargetSecurityGroup
+
+  MountTarget2:
+    Condition: createSecondMountTarget
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId: !Ref MountTarget2Subnet
+      SecurityGroups:
+        - !Ref MountTargetSecurityGroup
