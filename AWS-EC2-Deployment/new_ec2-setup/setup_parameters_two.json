@@ -1,42 +1,18 @@
 [
   {
-    "ParameterKey": "VPCCidrBlock",
-    "ParameterValue": "10.0.0.0/16"
+    "ParameterKey": "Encryption",
+    "ParameterValue": "true"
   },
   {
-    "ParameterKey": "PublicACidrBlock",
-    "ParameterValue": "10.0.1.0/24"
-  },
-  {
-    "ParameterKey": "PublicBCidrBlock",
-    "ParameterValue": "10.0.2.0/24"
-  },
-  {
-    "ParameterKey": "PrivateCidrBlock",
-    "ParameterValue": "10.0.0.0/24"
-  },
-  {
-    "ParameterKey": "AvailabilityZoneA",
-    "ParameterValue": "eu-west-1a"
-  },
-  {
-    "ParameterKey": "AvailabilityZoneB",
-    "ParameterValue": "eu-west-1b"
-  },
-  {
-    "ParameterKey": "ACMCertArn",
+    "ParameterKey": "FileSystemName",
     "ParameterValue": ""
   },
   {
-    "ParameterKey": "MyS3Bucket",
-    "ParameterValue": ""
+    "ParameterKey": "PerformanceMode",
+    "ParameterValue": "generalPurpose"
   },
   {
-    "ParameterKey": "KeyPairName",
-    "ParameterValue": ""
-  },
-  {
-    "ParameterKey": "AMIID",
+    "ParameterKey": "S3BucketLambda",
     "ParameterValue": ""
   }
 ]
