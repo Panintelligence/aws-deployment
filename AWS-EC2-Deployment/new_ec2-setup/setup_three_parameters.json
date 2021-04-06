@@ -1,18 +1,10 @@
 [
   {
-    "ParameterKey": "Encryption",
+    "ParameterKey": "AMIID",
     "ParameterValue": "true"
   },
   {
-    "ParameterKey": "FileSystemName",
-    "ParameterValue": ""
-  },
-  {
-    "ParameterKey": "PerformanceMode",
-    "ParameterValue": "generalPurpose"
-  },
-  {
-    "ParameterKey": "S3BucketLambda",
+    "ParameterKey": "KeyPairName",
     "ParameterValue": ""
   }
 ]
