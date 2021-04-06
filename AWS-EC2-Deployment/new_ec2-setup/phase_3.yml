@@ -1,32 +1,67 @@
-
+AWSTemplateFormatVersion: 2010-09-09
 
 
 # Maybe move the target group from phase 1 to phase 3 to add instance as target or have a condition when instance is created  then populate target
+Parameters:
 
-ElasticIP:
-    Type: AWS::EC2::EIP
-    Properties:
-      InstanceId: !Ref PanintelligenceImage
+  AMIID:
+    Type: String
+    Description: AMI ID of the AMI
+  KeyPairName:
+    Type: String
+    Description: AMI ID of the AMI
+Resources:
 
-
+ # attach role to instance profile to instance
   MyInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
       Path: "/"
       Roles:
         -
-          Ref: "PanintelligenceRole"
+          Fn::ImportValue: PanintelligenceRole
 
-  # Create AMI instance of BYOL panintelligence
-  PanintelligenceImage:
-    Type: AWS::EC2::Instance
+  PanintelligenceLaunchTemplate:
+    Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      AvailabilityZone: !Ref AvailabilityZoneA
       ImageId: !Ref AMIID
       InstanceType: t3.medium
       IamInstanceProfile: !Ref MyInstanceProfile
-      SecurityGroupIds:
-        - !Ref PrivateSecurityGroup
-        - !Ref SecurityGroupEc2Instance
+      SecurityGroups:
+          - Fn::ImportValue: PrivateSecurityGroup
+          - Fn::ImportValue: SecurityGroupVpcEndpoint
       KeyName: !Ref KeyPairName
-      SubnetId: !Ref PrivateSubnetA
+      UserData:
+        Fn::Base64: !Sub |
+            #!/bin/bash
+            sudo rm /var/spool/cron/root
+            touch /opt/pi/Dashboard/startup.sh
+            chmod +x /opt/pi/Dashboard/startup.sh
+            echo export PI_DB_HOST="<DB Host>" >> /opt/pi/Dashboard/startup.sh
+            echo export PI_DB_PASSWORD="<DB Password>" >> /opt/pi/Dashboard/startup.sh
+            echo export PI_DB_PORT="<DB Port>" >> /opt/pi/Dashboard/startup.sh
+            echo export PI_DB_SCHEMA_NAME="dashboard" >> /opt/pi/Dashboard/startup.sh
+            echo export PI_DB_USERNAME="<DB Username>" >> /opt/pi/Dashboard/startup.sh
+            echo export PI_EXTERNAL_DB="true" >> /opt/pi/Dashboard/startup.sh
+            echo cd /opt/pi/Dashboard >> /opt/pi/Dashboard/startup.sh
+            echo "/opt/pi/Dashboard/dashboard.sh all start" >> /opt/pi/Dashboard/startup.sh
+            touch /var/spool/cron/pi-user
+            echo @reboot /opt/pi/Dashboard/startup.sh > /var/spool/cron/pi-user
+            chown pi-user:pi-group /var/spool/cron/pi-user
+            chmod 400 /var/spool/cron/pi-user
+            sudo su -c /opt/pi/Dashboard/startup.sh pi-user    
+            
+
+  PanintelligenceAutoscalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+      - Fn::ImportValue: PrivateSubnetA
+      LaunchConfigurationName: !Ref PanintelligenceLaunchTemplate
+      MinSize: '1'
+      MaxSize: '5'
+      DesiredCapacity: '1'
+      HealthCheckGracePeriod: 300
+      MaxInstanceLifetime: 2592000
+      TargetGroupARNs:
+        - Fn::ImportValue: TargetGroup
