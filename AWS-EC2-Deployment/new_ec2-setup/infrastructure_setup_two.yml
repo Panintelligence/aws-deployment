@@ -1,0 +1,178 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+
+  # FileSystem Parameters
+  Encryption:
+    Type: String
+    Description: Enable Encryption for the FileSystem?  (Default - true)
+    ConstraintDescription: Must be a boolean value (true / false)
+    AllowedValues:
+      - true
+      - false
+    Default: true
+
+  FileSystemName:
+    Type: String
+    Description: Name for tagging the EFS FileSystem (Default - CloudFormationStackNameFileSystem)
+    Default: " "
+
+  PerformanceMode:
+    Type: String
+    Description: What performance mode would you like? (Default - generalPurpose)
+    ConstraintDescription: generalPurpose and maxIO are the only valid options
+    AllowedValues:
+      - "generalPurpose"
+      - "maxIO"
+    Default: "generalPurpose"
+
+
+
+Resources:
+
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    DependsOn: S3ToEFSLambda
+    Properties:
+      BucketName: !Sub 'panintelligence---${AWS::Region}--${AWS::AccountId}'
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt S3ToEFSLambda.Arn
+       
+  S3ToEFSLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          allowed_types: images,themes,excel-data
+          file_group: pi-user
+          file_owner: pi-user
+      FileSystemConfigs:
+      -
+        Arn: !GetAtt AccessPointResource.Arn
+        LocalMountPath: "/mnt/efs"
+      Handler: lambda_handler.lambda_handler
+      Role: !GetAtt LambdaRole.Arn
+      Code: 
+        S3Bucket: pan-myles-test
+        S3Key: lambda.zip
+      Runtime: python3.8
+      Timeout: 15
+      TracingConfig:
+        Mode: Active
+      VpcConfig:
+        SecurityGroupIds:
+          - Fn::ImportValue: EFSSecurityGroup
+        SubnetIds:
+          - Fn::ImportValue: DashboardSubnet
+    DependsOn: "MountTarget1"
+
+  S3InvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref S3ToEFSLambda
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt Bucket.Arn
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: lambdarole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+            - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+        Version: 2012-10-17
+      Path: /
+
+  ListBucketPolicies:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: panintelligence-list-bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'ec2:DescribeNetworkInterfaces'
+              - "ec2:CreateNetworkInterface"
+              - "ec2:DeleteNetworkInterface"
+              - "ec2:DescribeInstances"
+              - "ec2:AttachNetworkInterface"
+            Resource: '*'
+      Roles:
+        - !Ref LambdaRole
+
+  LambdaExecute:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: panintelligence-lambda-execute
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:*'
+            Resource: 'arn:aws:logs:*'
+          - Effect: Allow
+            Action:
+              - 's3:*'
+            Resource: !GetAtt Bucket.Arn
+      Roles:
+        - !Ref LambdaRole
+
+
+  FileSystem:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      Encrypted: !Ref Encryption
+      FileSystemTags:
+        - Key: Name
+          Value: !Ref FileSystemName
+      PerformanceMode: !Ref PerformanceMode
+
+
+  MountTarget1:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId:
+        Fn::ImportValue: DashboardSubnet
+      SecurityGroups:
+        - Fn::ImportValue: EFSSecurityGroup
+
+  EFSPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: panintelligence-write-bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'elasticfilesystem:*'
+            Resource:
+              - !GetAtt FileSystem.Arn
+      Roles:
+        - !Ref LambdaRole
+
+  AccessPointResource:
+    Type: 'AWS::EFS::AccessPoint'
+    Properties:
+      FileSystemId: !Ref FileSystem
+      PosixUser:
+        Uid: "0"
+        Gid: "0"
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: "0"
+          OwnerUid: "0"
+          Permissions: "777"
+        Path: "/"
