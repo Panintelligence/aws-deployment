@@ -1,0 +1,18 @@
+[
+  {
+    "ParameterKey": "Encryption",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "FileSystemName",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "PerformanceMode",
+    "ParameterValue": "generalPurpose"
+  },
+  {
+    "ParameterKey": "S3BucketLambda",
+    "ParameterValue": ""
+  }
+]
