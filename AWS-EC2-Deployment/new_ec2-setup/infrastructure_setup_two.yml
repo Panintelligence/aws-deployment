@@ -25,11 +25,8 @@ Parameters:
       - "generalPurpose"
       - "maxIO"
     Default: "generalPurpose"
-  
-  S3BucketLambda:
-    Type: String
-    Description: Name for the s3 bucket you have just created
-    
+
+
 
 Resources:
 
@@ -59,7 +56,7 @@ Resources:
       Handler: lambda_handler.lambda_handler
       Role: !GetAtt LambdaRole.Arn
       Code: 
-        S3Bucket: !Ref S3BucketLambda
+        S3Bucket: pan-myles-test
         S3Key: lambda.zip
       Runtime: python3.8
       Timeout: 15
@@ -127,7 +124,9 @@ Resources:
           - Effect: Allow
             Action:
               - 's3:*'
-            Resource: !GetAtt Bucket.Arn
+            Resource:
+              - !Sub 'arn:aws:s3:::${Bucket}/*'
+              - !Sub 'arn:aws:s3:::${Bucket}'
       Roles:
         - !Ref LambdaRole
 
@@ -179,3 +178,29 @@ Resources:
           OwnerUid: "0"
           Permissions: "777"
         Path: "/"
+
+  S3Endpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - 's3:*'
+            Resource:
+              - !Sub 'arn:aws:s3:::${Bucket}/*'
+              - !Sub 'arn:aws:s3:::${Bucket}'
+      RouteTableIds:
+        - Fn::ImportValue: RouteTable
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: 
+        Fn::ImportValue: VPC-ID
+    
+Outputs:
+  FileSystem:
+    Description: The FileSystem reference
+    Value: !Ref FileSystem
+    Export:
+      Name: FileSystem
