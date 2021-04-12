@@ -10,6 +10,9 @@ Parameters:
   KeyPairName:
     Type: String
     Description: AMI ID of the AMI
+  DashboardLicenceKey:
+    Type: String
+    Description: The Dashboard licence key, please obtain that from Panintelligence account manager
 Resources:
 
  # attach role to instance profile to instance
@@ -20,7 +23,7 @@ Resources:
       Roles:
         -
           Fn::ImportValue: PanintelligenceRole
-
+ 
   PanintelligenceLaunchTemplate:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
@@ -29,29 +32,59 @@ Resources:
       IamInstanceProfile: !Ref MyInstanceProfile
       SecurityGroups:
           - Fn::ImportValue: PrivateSecurityGroup
-          - Fn::ImportValue: SecurityGroupVpcEndpoint
+          - Fn::ImportValue: SecurityGroupEc2Instance
+          - Fn::ImportValue: EFSSecurityGroup
       KeyName: !Ref KeyPairName
       UserData:
-        Fn::Base64: !Sub |
-            #!/bin/bash
-            sudo rm /var/spool/cron/root
-            touch /opt/pi/Dashboard/startup.sh
-            chmod +x /opt/pi/Dashboard/startup.sh
-            echo export PI_DB_HOST="<DB Host>" >> /opt/pi/Dashboard/startup.sh
-            echo export PI_DB_PASSWORD="<DB Password>" >> /opt/pi/Dashboard/startup.sh
-            echo export PI_DB_PORT="<DB Port>" >> /opt/pi/Dashboard/startup.sh
-            echo export PI_DB_SCHEMA_NAME="dashboard" >> /opt/pi/Dashboard/startup.sh
-            echo export PI_DB_USERNAME="<DB Username>" >> /opt/pi/Dashboard/startup.sh
-            echo export PI_EXTERNAL_DB="true" >> /opt/pi/Dashboard/startup.sh
-            echo cd /opt/pi/Dashboard >> /opt/pi/Dashboard/startup.sh
-            echo "/opt/pi/Dashboard/dashboard.sh all start" >> /opt/pi/Dashboard/startup.sh
-            touch /var/spool/cron/pi-user
-            echo @reboot /opt/pi/Dashboard/startup.sh > /var/spool/cron/pi-user
-            chown pi-user:pi-group /var/spool/cron/pi-user
-            chmod 400 /var/spool/cron/pi-user
-            sudo su -c /opt/pi/Dashboard/startup.sh pi-user    
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash -x
+              mkdir -p /mnt/efs/
+              chown pi-user:pi-group /mnt/efs/
+              echo "${EfsFileSystemId}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> /etc/fstab
+              mount -a -t nfs4
+              mkdir -p /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
+              touch /opt/pi/Dashboard/startup.sh
+              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images/
+              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes/
+              ln -s /mnt/efs/images /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
+              ln -s /mnt/efs/themes /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
+              ln -s /mnt/efs/excel-data /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
+              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
+              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
+              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
+              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
+              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
+              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
+              rm /var/spool/cron/root
+              chmod +rx /opt/pi/Dashboard/startup.sh
+              echo "#!/usr/bin/bash" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_HOST=${DBHost}" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_PASSWORD=${DBPassword}" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_PORT=${DBPort}" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_SCHEMA_NAME='dashboard'" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_USERNAME=${DBUsername}" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_EXTERNAL_DB='true'" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_LICENCE='${DashboardLicenceKey}'" >> /opt/pi/Dashboard/startup.sh
+              echo cd /opt/pi/Dashboard >> /opt/pi/Dashboard/startup.sh
+              echo "/opt/pi/Dashboard/dashboard.sh all start" >> /opt/pi/Dashboard/startup.sh
+              touch /var/spool/cron/pi-user
+              echo @reboot /opt/pi/Dashboard/startup.sh > /var/spool/cron/pi-user
+              chown pi-user:pi-group /var/spool/cron/pi-user
+              chmod 400 /var/spool/cron/pi-user
+              sudo su -c /opt/pi/Dashboard/startup.sh pi-user
+              chown pi-user:pi-group /opt/pi/Dashboard/startup.sh
+            - EfsFileSystemId: !ImportValue FileSystem
+              DBHost: !ImportValue MyDBEndPoint
+              DBPassword: !ImportValue RDSPassword
+              DBPort: !ImportValue DBPort
+              DBUsername: !ImportValue RDSUsername
+              DashboardLicenceKey: !Ref DashboardLicenceKey
             
-
+              
+          
+            
   PanintelligenceAutoscalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
@@ -65,3 +98,7 @@ Resources:
       MaxInstanceLifetime: 2592000
       TargetGroupARNs:
         - Fn::ImportValue: TargetGroup
+      Tags:
+        - Key: Name
+          Value: Panintelligence
+          PropagateAtLaunch: "true"
