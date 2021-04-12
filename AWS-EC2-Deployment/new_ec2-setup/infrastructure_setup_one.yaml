@@ -4,19 +4,19 @@ Parameters:
   VPCCidrBlock:
     Type: String
     Default: 10.0.0.0/16
-    Description: The subnet for the VPC
-  PublicACidrBlock:
+    Description: The cider block for the VPC
+  PublicZoneACidrBlock:
     Type: String
     Default: 10.0.1.0/24
-    Description: The subnet for public subnet A
-  PublicBCidrBlock:
+    Description: The public cider block for availbility zone A that will be attached to ALB
+  PublicZoneBCidrBlock:
     Type: String
     Default: 10.0.2.0/24
-    Description: The subnet for public subnet B
-  PrivateCidrBlock:
+    Description: The public cider block for availbility zone B that will be attached to ALB
+  DashboardCidrBlock:
     Type: String
     Default: 10.0.0.0/24
-    Description: The subnet for private access
+    Description: The cider block for private access within the VPC that the EC2 instance will use
   AvailabilityZoneA:
     Type: String
     Description: Please enter your Availability zone A depending what region you are in. For example eu-west-1a for Ireland
@@ -31,7 +31,7 @@ Parameters:
     Type: String
     Default: dashboard12
     Description: The password for the RDS DB
-  DBInstanceIdentifier:
+  DBName:
     Type: String
     Default: panintelligence
     Description: The name of the database
@@ -61,12 +61,13 @@ Resources:
       EnableDnsHostnames: true
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}'
+          Value: !Sub 'Panintelligence-${AWS::StackName}'
 
   # Create the internet gateway and attach it to the VPC
   InternetGateway:
     Type: 'AWS::EC2::InternetGateway'
     DependsOn: VPC
+          
   AttachGateway:
     Type: 'AWS::EC2::VPCGatewayAttachment'
     Properties:
@@ -79,29 +80,29 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock:
-        Ref: PublicACidrBlock
+        Ref: PublicZoneACidrBlock
       AvailabilityZone: !Ref AvailabilityZoneA
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-Public-A'
+          Value: !Sub '${AWS::StackName}-Public-Subnet-Zone-A'
 
   PublicSubnetB:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
       CidrBlock:
-        Ref: PublicBCidrBlock
+        Ref: PublicZoneBCidrBlock
       AvailabilityZone: !Ref AvailabilityZoneB
       Tags:
         - Key: Name
-          Value: !Sub '${AWS::StackName}-Public-B'
+          Value: !Sub '${AWS::StackName}-Public-B-Subnet-Zone-B'
 
   PrivateSubnetA:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
       CidrBlock:
-        Ref: PrivateCidrBlock
+        Ref: DashboardCidrBlock
       AvailabilityZone: !Ref AvailabilityZoneA
       Tags:
         - Key: Name
@@ -146,6 +147,13 @@ Resources:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Private-Route-table'
 
+  PublicRoute1:
+    Type: 'AWS::EC2::Route'
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
   # Associate subnets to route tables
   RDSSubnetARouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
@@ -285,7 +293,7 @@ Resources:
        RuleNumber: 300
        Protocol: 6
        RuleAction: allow
-       CidrBlock: !Ref PrivateCidrBlock
+       CidrBlock: !Ref DashboardCidrBlock
        PortRange:
          From: 1024
          To: 65535
@@ -341,7 +349,7 @@ Resources:
       PubliclyAccessible: true
       DBSubnetGroupName: !Ref RDSSubnetGroup
       DBParameterGroupName: !Ref RDSDBParameterGroup
-      DBInstanceIdentifier: !Ref DBInstanceIdentifier
+      DBInstanceIdentifier: !Ref DBName
       AvailabilityZone: !Ref AvailabilityZoneA
       Port: 3306
     DeletionPolicy: Snapshot
@@ -466,7 +474,8 @@ Resources:
       Path: /
       ManagedPolicyArns:
         # The managed IAM policy AmazonSSMManagedInstanceCore grants access to Session Manager
-        - !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+        #- !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
 
 
 
@@ -540,25 +549,6 @@ Resources:
         - !Ref SecurityGroupVpcEndpoint
       VpcEndpointType: Interface
       PrivateDnsEnabled: True
-
- # Don't need s3 due to having RDS backups and no need to restore through ec2
-#  # S3 endpoint
-#  S3Endpoint:
-#    Type: 'AWS::EC2::VPCEndpoint'
-#    Properties:
-#      PolicyDocument:
-#        Version: 2012-10-17
-#        Statement:
-#          - Effect: Allow
-#            Principal: '*'
-#            Action:
-#              - 's3:GetObject'
-#            Resource:
-#             - !Sub 'arn:aws:s3:::${MyS3Bucket}'
-#      RouteTableIds:
-#       - !Ref PrivateRouteTable
-#      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
-#      VpcId: !Ref VPC
 
 Outputs:
   VPCID:
@@ -655,3 +645,9 @@ Outputs:
     Value: !Ref SecurityGroupVpcEndpoint
     Export:
       Name: SecurityGroupVpcEndpoint
+      
+  RouteTable:
+    Description: Panintelligence route table
+    Value: !Ref PublicRouteTable
+    Export:
+      Name: RouteTable
