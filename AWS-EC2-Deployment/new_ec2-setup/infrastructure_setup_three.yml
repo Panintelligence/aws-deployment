@@ -33,7 +33,7 @@ Resources:
       SecurityGroups:
           - Fn::ImportValue: PrivateSecurityGroup
           - Fn::ImportValue: SecurityGroupEc2Instance
-          - Fn::ImportValue: EFSSecurityGroup
+          - Fn::ImportValue: EFSMountTarget
       KeyName: !Ref KeyPairName
       UserData:
         Fn::Base64:
@@ -58,6 +58,7 @@ Resources:
               chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
               chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
               rm /var/spool/cron/root
+              sed -i 's/cacheMaxSize="20000"/cacheMaxSize="20000" allowLinking="true"/g' /opt/pi/Dashboard/tomcat/conf/context.xml
               chmod +rx /opt/pi/Dashboard/startup.sh
               echo "#!/usr/bin/bash" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_HOST=${DBHost}" >> /opt/pi/Dashboard/startup.sh
