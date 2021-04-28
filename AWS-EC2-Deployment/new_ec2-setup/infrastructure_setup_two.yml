@@ -30,6 +30,18 @@ Parameters:
 
 Resources:
 
+  EFSMountTarget:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: 
+        Fn::ImportValue: VPC-ID
+      GroupDescription: Security group for mount target
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '2049'
+          ToPort: '2049'
+          CidrIp: 
+            Fn::ImportValue: VPC-CidrBlock
 
   Bucket:
     Type: AWS::S3::Bucket
@@ -64,7 +76,7 @@ Resources:
         Mode: Active
       VpcConfig:
         SecurityGroupIds:
-          - Fn::ImportValue: EFSSecurityGroup
+          - !Ref EFSMountTarget
         SubnetIds:
           - Fn::ImportValue: DashboardSubnet
     DependsOn: "MountTarget1"
@@ -119,11 +131,13 @@ Resources:
         Statement:
           - Effect: Allow
             Action:
-              - 'logs:*'
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
             Resource: 'arn:aws:logs:*'
           - Effect: Allow
             Action:
-              - 's3:*'
+              - 's3:GetObject'
             Resource:
               - !Sub 'arn:aws:s3:::${Bucket}/*'
               - !Sub 'arn:aws:s3:::${Bucket}'
@@ -148,7 +162,7 @@ Resources:
       SubnetId:
         Fn::ImportValue: DashboardSubnet
       SecurityGroups:
-        - Fn::ImportValue: EFSSecurityGroup
+        - !Ref EFSMountTarget
 
   EFSPolicy:
     Type: AWS::IAM::Policy
@@ -204,3 +218,9 @@ Outputs:
     Value: !Ref FileSystem
     Export:
       Name: FileSystem
+
+  EFSMountTarget:
+    Description: The EFSMountTarget security group reference
+    Value: !Ref EFSMountTarget
+    Export:
+      Name: EFSMountTarget
