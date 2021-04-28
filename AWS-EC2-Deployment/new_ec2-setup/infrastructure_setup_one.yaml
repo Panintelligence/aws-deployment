@@ -243,16 +243,7 @@ Resources:
           ToPort: 8224
           SourceSecurityGroupId: !Ref ALBSecurityGroup
 
-  MountTargetSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      VpcId: !Ref VPC
-      GroupDescription: Security group for mount target
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: '2049'
-          ToPort: '2049'
-          CidrIp: !Ref VPCCidrBlock
+ 
   # Create NACL
   PanintelligencePublic:
     Type: AWS::EC2::NetworkAcl
@@ -567,12 +558,6 @@ Outputs:
     Value: !Ref PrivateSubnetA
     Export:
       Name: DashboardSubnet
-
-  MountTargetSecurityGroup:
-    Description: The security group for EFS to be mounted on
-    Value: !Ref MountTargetSecurityGroup
-    Export:
-      Name: EFSSecurityGroup
 
   PanintelligenceTargetGroup:
     Description: Panintelligence Target group for load balancer
