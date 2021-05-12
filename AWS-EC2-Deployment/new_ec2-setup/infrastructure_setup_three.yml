@@ -46,8 +46,8 @@ Resources:
               mount -a -t nfs4
               mkdir -p /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
               touch /opt/pi/Dashboard/startup.sh
-              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images/
-              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes/
+              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
+              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
               ln -s /mnt/efs/images /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
               ln -s /mnt/efs/themes /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
               ln -s /mnt/efs/excel-data /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
@@ -57,7 +57,6 @@ Resources:
               chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
               chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
               chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
-              rm /var/spool/cron/root
               sed -i 's/cacheMaxSize="20000"/cacheMaxSize="20000" allowLinking="true"/g' /opt/pi/Dashboard/tomcat/conf/context.xml
               chmod +rx /opt/pi/Dashboard/startup.sh
               echo "#!/usr/bin/bash" >> /opt/pi/Dashboard/startup.sh
@@ -70,12 +69,9 @@ Resources:
               echo "export PI_LICENCE='${DashboardLicenceKey}'" >> /opt/pi/Dashboard/startup.sh
               echo cd /opt/pi/Dashboard >> /opt/pi/Dashboard/startup.sh
               echo "/opt/pi/Dashboard/dashboard.sh all start" >> /opt/pi/Dashboard/startup.sh
-              touch /var/spool/cron/pi-user
-              echo @reboot /opt/pi/Dashboard/startup.sh > /var/spool/cron/pi-user
-              chown pi-user:pi-group /var/spool/cron/pi-user
-              chmod 400 /var/spool/cron/pi-user
-              sudo su -c /opt/pi/Dashboard/startup.sh pi-user
-              chown pi-user:pi-group /opt/pi/Dashboard/startup.sh
+              crontab -u pi-user -r
+              lines="@reboot /bin/bash /opt/pi/Dashboard/startup.sh"
+              echo "$lines" | crontab -u pi-user -
             - EfsFileSystemId: !ImportValue FileSystem
               DBHost: !ImportValue MyDBEndPoint
               DBPassword: !ImportValue RDSPassword
@@ -83,8 +79,6 @@ Resources:
               DBUsername: !ImportValue RDSUsername
               DashboardLicenceKey: !Ref DashboardLicenceKey
             
-              
-          
             
   PanintelligenceAutoscalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
@@ -103,3 +97,67 @@ Resources:
         - Key: Name
           Value: Panintelligence
           PropagateAtLaunch: "true"
+          
+      
+  LambdaExecute:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: panintelligence-lambda-execute
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+            Resource: 'arn:aws:logs:*'
+          - Effect: Allow
+            Action:
+              - 's3:*'
+            Resource:
+              - !Sub 'arn:aws:s3:::${Bucket}/*'
+              - !Sub 'arn:aws:s3:::${Bucket}'
+      Roles:
+        - Fn::ImportValue: LambdaRole
+
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'panintelligence---${AWS::Region}--${AWS::AccountId}'
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Function: 
+              Fn::ImportValue:
+                S3ToEFSLambdaArn
+      
+  S3InvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: Bucket
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: 
+        Fn::ImportValue: 
+          S3ToEFSLambdaArn
+      Principal: s3.amazonaws.com
+      SourceArn: !GetAtt Bucket.Arn
+      
+  S3Endpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - 's3:*'
+            Resource:
+              - !Sub 'arn:aws:s3:::${Bucket}/*'
+              - !Sub 'arn:aws:s3:::${Bucket}'
+      RouteTableIds:
+        - Fn::ImportValue: RouteTable
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: 
+        Fn::ImportValue: VPC-ID
