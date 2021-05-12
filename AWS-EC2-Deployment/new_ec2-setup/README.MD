@@ -42,5 +42,23 @@ Once this is done, please update it with this script:
 aws cloudformation update-stack --stack-name panintelligence_setup_three --template-body file://infrastructure_setup_three_update.yml --parameters file://setup_three_parameters.json --capabilities CAPABILITY_NAMED_IAM
 ```
 
+6) Now upload the themes and images to s3 that was created in step 5.
+it should look like "panintelligence-{aws-region}-{aws-accountid}
+```BASH
+aws s3 ls
+```
+```BASH
+cd /resources/
+```
+```BASH
+aws s3 cp themes s3://{BUCKET_NAME_HERE]
+```
+```BASH
+aws s3 cp images s3://{BUCKET_NAME_HERE]
+```
+
+
+
+
 
 
