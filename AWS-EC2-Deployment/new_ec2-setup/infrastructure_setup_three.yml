@@ -125,12 +125,6 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub 'panintelligence---${AWS::Region}--${AWS::AccountId}'
-      NotificationConfiguration:
-        LambdaConfigurations:
-          - Event: 's3:ObjectCreated:*'
-            Function: 
-              Fn::ImportValue:
-                S3ToEFSLambdaArn
       
   S3InvokeLambdaPermission:
     Type: AWS::Lambda::Permission
