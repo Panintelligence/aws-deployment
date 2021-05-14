@@ -52,7 +52,7 @@ aws cloudformation create-stack --stack-name PanintelligenceOne --template-body 
 
 Wait until the stack is built (eta 2 minutes), check the status with this command:
 ```BASH
-aws cloudformation describe-stacks --stack-name PanintelligenceOne
+aws cloudformation describe-stacks --stack-name PanintelligenceOne | jq '.Stacks[0].StackStatus'
 ```
 
 -  The S3 bucket that you have created, copy the lambda.zip to that bucket
@@ -68,7 +68,7 @@ aws cloudformation create-stack --stack-name PanintelligenceTwo --template-body 
 ```
 Wait until the stack is built (eta 2 minutes), check the status with this command:
 ```BASH
-aws cloudformation describe-stacks --stack-name PanintelligenceTwo
+aws cloudformation describe-stacks --stack-name PanintelligenceTwo | jq '.Stacks[0].StackStatus'
 ```
 -  We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
 ```BASH
@@ -76,7 +76,7 @@ aws cloudformation create-stack --stack-name PanintelligenceThree --template-bod
 ```
 Wait until the stack is built (eta 2 minutes), check the status with this command:
 ```BASH
-aws cloudformation describe-stacks --stack-name PanintelligenceThree
+aws cloudformation describe-stacks --stack-name PanintelligenceThree | jq '.Stacks[0].StackStatus'
 ```
 Once this is done, please update it with this script:
 ```BASH
@@ -84,7 +84,7 @@ aws cloudformation update-stack --stack-name PanintelligenceThree --template-bod
 ```
 Wait until the stack is built (eta 2 minutes), check the status with this command:
 ```BASH
-aws cloudformation describe-stacks --stack-name PanintelligenceThree
+aws cloudformation describe-stacks --stack-name PanintelligenceThree | jq '.Stacks[0].StackStatus'
 ```
 
  Now upload the themes and images to s3 that was created in step 5.
