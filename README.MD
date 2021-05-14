@@ -50,6 +50,10 @@ aws ec2 create-key-pair --key-name $KEYPAIRNAME --query 'KeyMaterial' --output t
 aws cloudformation create-stack --stack-name PanintelligenceOne --template-body file://infrastructure_setup_one.yaml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DashboardCidrBlock,ParameterValue=$DASHBOARDCIDRBLOCK ParameterKey=AvailabilityZoneA,ParameterValue=$AVAILABILITYZONEA ParameterKey=AvailabilityZoneB,ParameterValue=$AVAILABILITYZONEB ParameterKey=RDSUsername,ParameterValue=$RDSUSERNAME ParameterKey=RDSPassword,ParameterValue=$RDSPASSWORD ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPublicA,ParameterValue=$RDSPUBLICA ParameterKey=RDSPublicB,ParameterValue=$RDSPUBLICB ParameterKey=ACMCertArn,ParameterValue=$ACMCERTARN ParameterKey=S3BucketName,ParameterValue=$S3BUCKETNAME --capabilities CAPABILITY_NAMED_IAM
 ```
 
+Wait until the stack is built (eta 2 minutes), check the status with this command:
+```BASH
+aws cloudformation describe-stacks --stack-name PanintelligenceOne
+```
 
 -  The S3 bucket that you have created, copy the lambda.zip to that bucket
 
@@ -62,14 +66,25 @@ aws s3 cp lambda.zip s3://{$S3BUCKETNAME}
 ```BASH
 aws cloudformation create-stack --stack-name PanintelligenceTwo --template-body file://infrastructure_setup_two.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME ParameterKey=PerformanceMode,ParameterValue=$PERFORMANCEMODE ParameterKey=S3lambdabucket,ParameterValue=$S3LAMBDABUCKET --capabilities CAPABILITY_NAMED_IAM
 ```
-
+Wait until the stack is built (eta 2 minutes), check the status with this command:
+```BASH
+aws cloudformation describe-stacks --stack-name PanintelligenceTwo
+```
 -  We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
 ```BASH
 aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
 ```
+Wait until the stack is built (eta 2 minutes), check the status with this command:
+```BASH
+aws cloudformation describe-stacks --stack-name PanintelligenceThree
+```
 Once this is done, please update it with this script:
 ```BASH
 aws cloudformation update-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three_update.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
+```
+Wait until the stack is built (eta 2 minutes), check the status with this command:
+```BASH
+aws cloudformation describe-stacks --stack-name PanintelligenceThree
 ```
 
  Now upload the themes and images to s3 that was created in step 5.
