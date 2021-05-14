@@ -9,6 +9,36 @@
 ## Prerequisite 
 Edit the parameters for each json file to pass the value into the yaml scripts. Some values are set to default.
 
+## Setting the parameters:
+infrastructure_setup_one:
+```BASH
+VPCCIDRBLOCK="10.0.0.0/16"
+PUBLICZONEACIDRBLOCK="10.0.1.0/24"
+PUBLICZONEBCIDRBLOCK="10.0.1.0/24"
+DASHBOARDCIDRBLOCK="10.0.0.0/24"
+AVAILABILITYZONEA= "eu-west-1a"
+AVAILABILITYZONEB="eu-west-1b"
+RDSUSERNAME="dashboard"
+RDSPASSWORD="5up3r53cur3P455w0rd!"
+DBNAME="dashboard"
+RDSPUBLICA="10.0.3.0/24"
+RDSPUBLICB="10.0.3.0/24"
+ACMCERTARN=<paste your ACM ARN here>
+```
+Infrastructure set up two: 
+```BASH
+ENCRYPTION = "true"
+FILESYSTEMNAME = <Give a name for your EFS>
+PERFORMANCEMODE = "generalPurpose"
+S3LAMBDABUCKET = <Enter the S3 bucket name that you have created for lambda zip>
+```
+Infrastructure_setup_three: 
+
+```BASH
+AMIID = <Enter Panintelligence AMI here>
+KEYPAIRNAME = <Enter your Key pair name here>
+DASHBOARDLICENCEKEY = <Paste your licence key here, make sure it's in line>
+```
 ## Run these commands 
 
 - 1) This script builds the infrastructure of VPC and networking side
