@@ -550,7 +550,7 @@ Outputs:
       Name: VPC-ID
   S3Bucket:
     Description: The S3Bucket for lambda zip
-    Value: !Ref S3BucketLambda
+    Value: !Ref S3Bucket
     Export:
       Name: S3BucketLambda
   VPCCidrBlock:
