@@ -46,6 +46,10 @@ Parameters:
   ACMCertArn:
     Type: String
     Description: Please obtain your ACM ARN that you wish to use on the load balancer for https 
+S3BucketName:
+    Type: String
+    Description: S3 bucket name
+  
 Resources:
   ######################### CHECKED #################################################
   # Create the VPC with DNS enabled
@@ -534,12 +538,22 @@ Resources:
       VpcEndpointType: Interface
       PrivateDnsEnabled: True
 
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref S3BucketName
+
 Outputs:
   VPCID:
     Description: The VPC ID
     Value: !Ref VPC
     Export:
       Name: VPC-ID
+  S3Bucket:
+    Description: The S3Bucket for lambda zip
+    Value: !Ref S3BucketLambda
+    Export:
+      Name: S3BucketLambda
   VPCCidrBlock:
     Description: The VPC ID
     Value: !GetAtt VPC.CidrBlock
