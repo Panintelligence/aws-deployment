@@ -2,11 +2,18 @@
 
 - Log into AWS management console
 - Go into AWS Cloudshell
-- Sign into git 
-- git clone this project
 
 
 ## Prerequisite 
+
+## Git clone
+```BASH
+mkdir panintelligence
+cd panintelligence
+git clone https://github.com/Panintelligence/aws-deployment.git
+cd aws-deployment
+```
+
 
 ## Create the key pair
 
@@ -14,6 +21,7 @@ This is an example of creating a keypair that you can use.
 ```BASH
 aws ec2 create-key-pair --key-name Panintelligence --query 'KeyMaterial' --output text > Panintelligence.pem
 ```
+
 
 ## Setting the parameters:
 
