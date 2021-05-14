@@ -27,22 +27,22 @@ ACMCERTARN=<paste your ACM ARN here>
 ```
 S3_creation:
 ```
-S3BUCKETNAME = <Enter bucket name so you can upload lambda zip>
+S3BUCKETNAME=<Enter bucket name so you can upload lambda zip>
 ```
 
 Infrastructure set up two: 
 ```BASH
 ENCRYPTION=true
-FILESYSTEMNAME = <Give a name for your EFS>
+FILESYSTEMNAME=<Give a name for your EFS>
 PERFORMANCEMODE=generalPurpose
-S3LAMBDABUCKET = <Enter the S3 bucket name that you have created for lambda zip>
+S3LAMBDABUCKET=<Enter the S3 bucket name that you have created for lambda zip>
 ```
 Infrastructure_setup_three: 
 
 ```BASH
-AMIID = <Enter Panintelligence AMI here>
-KEYPAIRNAME = <Enter your Key pair name here>
-DASHBOARDLICENCEKEY = <Paste your licence key here, make sure it's in line>
+AMIID=<Enter Panintelligence AMI here>
+KEYPAIRNAME=<Enter your Key pair name here>
+DASHBOARDLICENCEKEY=<Paste your licence key here, make sure it's in line>
 ```
 ## Run these commands 
 
