@@ -15,14 +15,6 @@ cd aws-deployment
 ```
 
 
-## Create the key pair
-
-This is an example of creating a keypair that you can use. 
-```BASH
-aws ec2 create-key-pair --key-name Panintelligence --query 'KeyMaterial' --output text > Panintelligence.pem
-```
-
-
 ## Setting the parameters:
 
 ```BASH
@@ -47,29 +39,35 @@ DASHBOARDLICENCEKEY=<Paste your licence key here, make sure it's in line>
 ```
 ## Run these commands 
 
-- 1) This script builds the infrastructure of VPC and networking side
+- Create the keypair
+This is an example of creating a keypair that you can use. 
+```BASH
+aws ec2 create-key-pair --key-name $KEYPAIRNAME --query 'KeyMaterial' --output text > $KEYPAIRNAME.pem
+```
+
+-  This script builds the infrastructure of VPC and networking side
 ``` BASH
 aws cloudformation create-stack --stack-name panintelligence_setup_one --template-body file://infrastructure_setup_one.yaml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DASHBOARDCIDRBLOCK,ParameterValue=$DashboardCidrBlock ParameterKey=AvailabilityZoneA,ParameterValue=$AVAILABILITYZONEA ParameterKey=AvailabilityZoneB,ParameterValue=$AVAILABILITYZONEB ParameterKey=RDSUsername,ParameterValue=$RDSUSERNAME ParameterKey=RDSPassword,ParameterValue=$RDSPASSWORD ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPublicA,ParameterValue=$RDSPUBLICA ParameterKey=RDSPublicB,ParameterValue=$RDSPUBLICB ParameterKey=ACMCertArn,ParameterValue=$ACMCERTARN --capabilities CAPABILITY_NAMED_IAM
 ```
 
-- 2) Create an s3 bucket to upload the lambda function:
+-  Create an s3 bucket to upload the lambda function:
 
 ```BASH
 aws cloudformation create-stack --stack-name panintelligence_setup_s3 --template-body file://s3_creation.yaml --parameters ParameterKey=S3BucketName,ParameterValue=$S3BUCKETNAME --capabilities CAPABILITY_NAMED_IAM
 ```
-- 3) The S3 bucket that you have created, copy the lambda.zip to that bucket
+-  The S3 bucket that you have created, copy the lambda.zip to that bucket
 
 ```BASH
 aws s3 cp lambda.zip s3://{$S3BUCKETNAME}
 ```
 
-- 4) Next onto the lambda function deployment
+-  Next onto the lambda function deployment
 
 ```BASH
 aws cloudformation create-stack --stack-name panintelligence_setup_two --template-body file://infrastructure_setup_two.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME ParameterKey=PerformanceMode,ParameterValue=$PERFORMANCEMODE ParameterKey=S3lambdabucket,ParameterValue=$S3LAMBDABUCKET --capabilities CAPABILITY_NAMED_IAM
 ```
 
-- 5) We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
+-  We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
 ```BASH
 aws cloudformation create-stack --stack-name panintelligence_setup_three --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
 ```
@@ -78,7 +76,7 @@ Once this is done, please update it with this script:
 aws cloudformation update-stack --stack-name panintelligence_setup_three --template-body file://infrastructure_setup_three_update.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
 ```
 
-6) Now upload the themes and images to s3 that was created in step 5.
+ Now upload the themes and images to s3 that was created in step 5.
 it should look like "panintelligence-{aws-region}-{aws-accountid}
 ```BASH
 aws s3 ls
