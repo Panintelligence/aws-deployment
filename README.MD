@@ -47,14 +47,10 @@ aws ec2 create-key-pair --key-name $KEYPAIRNAME --query 'KeyMaterial' --output t
 
 -  This script builds the infrastructure of VPC and networking side
 ``` BASH
-aws cloudformation create-stack --stack-name panintelligence_setup_one --template-body file://infrastructure_setup_one.yaml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DASHBOARDCIDRBLOCK,ParameterValue=$DashboardCidrBlock ParameterKey=AvailabilityZoneA,ParameterValue=$AVAILABILITYZONEA ParameterKey=AvailabilityZoneB,ParameterValue=$AVAILABILITYZONEB ParameterKey=RDSUsername,ParameterValue=$RDSUSERNAME ParameterKey=RDSPassword,ParameterValue=$RDSPASSWORD ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPublicA,ParameterValue=$RDSPUBLICA ParameterKey=RDSPublicB,ParameterValue=$RDSPUBLICB ParameterKey=ACMCertArn,ParameterValue=$ACMCERTARN --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name panintelligence_setup_one --template-body file://infrastructure_setup_one.yaml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DASHBOARDCIDRBLOCK,ParameterValue=$DashboardCidrBlock ParameterKey=AvailabilityZoneA,ParameterValue=$AVAILABILITYZONEA ParameterKey=AvailabilityZoneB,ParameterValue=$AVAILABILITYZONEB ParameterKey=RDSUsername,ParameterValue=$RDSUSERNAME ParameterKey=RDSPassword,ParameterValue=$RDSPASSWORD ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPublicA,ParameterValue=$RDSPUBLICA ParameterKey=RDSPublicB,ParameterValue=$RDSPUBLICB ParameterKey=ACMCertArn,ParameterValue=$ACMCERTARN ParameterKey=S3BucketName,ParameterValue=$S3BUCKETNAME --capabilities CAPABILITY_NAMED_IAM
 ```
 
--  Create an s3 bucket to upload the lambda function:
 
-```BASH
-aws cloudformation create-stack --stack-name panintelligence_setup_s3 --template-body file://s3_creation.yaml --parameters ParameterKey=S3BucketName,ParameterValue=$S3BUCKETNAME --capabilities CAPABILITY_NAMED_IAM
-```
 -  The S3 bucket that you have created, copy the lambda.zip to that bucket
 
 ```BASH
