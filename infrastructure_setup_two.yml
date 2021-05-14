@@ -14,14 +14,6 @@ Parameters:
       Name for tagging the EFS FileSystem (Default -
       CloudFormationStackNameFileSystem)
     Default: ' '
-  PerformanceMode:
-    Type: String
-    Description: What performance mode would you like? (Default - generalPurpose)
-    ConstraintDescription: generalPurpose and maxIO are the only valid options
-    AllowedValues:
-      - generalPurpose
-      - maxIO
-    Default: generalPurpose
 Resources:
   EFSMountTarget:
     Type: 'AWS::EC2::SecurityGroup'
@@ -99,7 +91,7 @@ Resources:
       FileSystemTags:
         - Key: Name
           Value: !Ref FileSystemName
-      PerformanceMode: !Ref PerformanceMode
+      PerformanceMode: generalPurpose
   MountTarget1:
     Type: 'AWS::EFS::MountTarget'
     Properties:
