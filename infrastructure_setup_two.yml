@@ -22,10 +22,6 @@ Parameters:
       - generalPurpose
       - maxIO
     Default: generalPurpose
-  S3lambdabucket:
-    Type: String
-    Description: Name of the s3 bucket you have created to upload the lambda zip
-    Default: ' '
 Resources:
   EFSMountTarget:
     Type: 'AWS::EC2::SecurityGroup'
@@ -53,7 +49,7 @@ Resources:
       Handler: lambda_handler.lambda_handler
       Role: !GetAtt LambdaRole.Arn
       Code:
-        S3Bucket: !Ref S3lambdabucket
+        S3Bucket: 'Fn::ImportValue': S3BucketLambda
         S3Key: lambda.zip
       Runtime: python3.8
       Timeout: 15
