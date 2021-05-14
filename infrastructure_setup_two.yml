@@ -1,0 +1,167 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  Encryption:
+    Type: String
+    Description: Enable Encryption for the FileSystem?  (Default - true)
+    ConstraintDescription: Must be a boolean value (true / false)
+    AllowedValues:
+      - true
+      - false
+    Default: true
+  FileSystemName:
+    Type: String
+    Description: >-
+      Name for tagging the EFS FileSystem (Default -
+      CloudFormationStackNameFileSystem)
+    Default: ' '
+  PerformanceMode:
+    Type: String
+    Description: What performance mode would you like? (Default - generalPurpose)
+    ConstraintDescription: generalPurpose and maxIO are the only valid options
+    AllowedValues:
+      - generalPurpose
+      - maxIO
+    Default: generalPurpose
+  S3lambdabucket:
+    Type: String
+    Description: Name of the s3 bucket you have created to upload the lambda zip
+    Default: ' '
+Resources:
+  EFSMountTarget:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId:
+        'Fn::ImportValue': VPC-ID
+      GroupDescription: Security group for mount target
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '2049'
+          ToPort: '2049'
+          CidrIp:
+            'Fn::ImportValue': VPC-CidrBlock
+  S3ToEFSLambda:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Environment:
+        Variables:
+          allowed_types: 'images,themes,excel-data'
+          file_group: pi-user
+          file_owner: pi-user
+      FileSystemConfigs:
+        - Arn: !GetAtt AccessPointResource.Arn
+          LocalMountPath: /mnt/efs
+      Handler: lambda_handler.lambda_handler
+      Role: !GetAtt LambdaRole.Arn
+      Code:
+        S3Bucket: !Ref S3lambdabucket
+        S3Key: lambda.zip
+      Runtime: python3.8
+      Timeout: 15
+      TracingConfig:
+        Mode: Active
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref EFSMountTarget
+        SubnetIds:
+          - 'Fn::ImportValue': DashboardSubnet
+    DependsOn: MountTarget1
+  LambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: lambdarole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+        Version: 2012-10-17
+      Path: /
+  ListBucketPolicies:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: panintelligence-list-bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'ec2:DescribeNetworkInterfaces'
+              - 'ec2:CreateNetworkInterface'
+              - 'ec2:DeleteNetworkInterface'
+              - 'ec2:DescribeInstances'
+              - 'ec2:AttachNetworkInterface'
+            Resource: '*'
+      Roles:
+        - !Ref LambdaRole
+  FileSystem:
+    Type: 'AWS::EFS::FileSystem'
+    Properties:
+      Encrypted: !Ref Encryption
+      FileSystemTags:
+        - Key: Name
+          Value: !Ref FileSystemName
+      PerformanceMode: !Ref PerformanceMode
+  MountTarget1:
+    Type: 'AWS::EFS::MountTarget'
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId:
+        'Fn::ImportValue': DashboardSubnet
+      SecurityGroups:
+        - !Ref EFSMountTarget
+  EFSPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: panintelligence-write-bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'elasticfilesystem:*'
+            Resource:
+              - !GetAtt FileSystem.Arn
+      Roles:
+        - !Ref LambdaRole
+  AccessPointResource:
+    Type: 'AWS::EFS::AccessPoint'
+    Properties:
+      FileSystemId: !Ref FileSystem
+      PosixUser:
+        Uid: '0'
+        Gid: '0'
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: '0'
+          OwnerUid: '0'
+          Permissions: '777'
+        Path: '/'
+Outputs:
+  FileSystem:
+    Description: The FileSystem reference
+    Value: !Ref FileSystem
+    Export:
+      Name: FileSystem
+  EFSMountTarget:
+    Description: The EFSMountTarget security group reference
+    Value: !Ref EFSMountTarget
+    Export:
+      Name: EFSMountTarget
+  LambdaEFSRef:
+    Description: The Lambda reference of s3 to efs
+    Value: !Ref S3ToEFSLambda
+    Export:
+      Name: S3ToEFSLambda
+  LambdaEFSArn:
+    Description: The Lambda Arn of s3 to efs
+    Value: !GetAtt S3ToEFSLambda.Arn
+    Export:
+      Name: S3ToEFSLambdaArn
+  LambdaRole:
+    Description: The Lambda role
+    Value: !Ref LambdaRole
+    Export:
+      Name: LambdaRole

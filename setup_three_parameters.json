@@ -1,0 +1,10 @@
+[
+  {
+    "ParameterKey": "AMIID",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "KeyPairName",
+    "ParameterValue": ""
+  }
+]
