@@ -25,6 +25,11 @@ RDSPUBLICA="10.0.3.0/24"
 RDSPUBLICB="10.0.3.0/24"
 ACMCERTARN=<paste your ACM ARN here>
 ```
+S3_creation:
+```
+S3BUCKETNAME = <Enter bucket name so you can upload lambda zip>
+```
+
 Infrastructure set up two: 
 ```BASH
 ENCRYPTION = "true"
