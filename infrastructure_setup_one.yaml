@@ -46,7 +46,7 @@ Parameters:
   ACMCertArn:
     Type: String
     Description: Please obtain your ACM ARN that you wish to use on the load balancer for https 
-S3BucketName:
+  S3BucketName:
     Type: String
     Description: S3 bucket name
   
