@@ -53,6 +53,10 @@ Parameters:
 Resources:
   ######################### CHECKED #################################################
   # Create the VPC with DNS enabled
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref S3BucketName
   VPC:
     Type: 'AWS::EC2::VPC'
     Properties:
@@ -537,11 +541,6 @@ Resources:
         - !Ref SecurityGroupVpcEndpoint
       VpcEndpointType: Interface
       PrivateDnsEnabled: True
-
-  S3Bucket:
-    Type: 'AWS::S3::Bucket'
-    Properties:
-      BucketName: !Ref S3BucketName
 
 Outputs:
   VPCID:
