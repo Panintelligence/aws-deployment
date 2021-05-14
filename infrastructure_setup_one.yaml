@@ -35,9 +35,6 @@ Parameters:
     Type: String
     Default: panintelligence
     Description: The name of the database
-  DBIngressIP:
-    Type: String
-    Description: The IP address that you wish to use accessing the RDS via your local machine.
   RDSPublicA:
     Type: String
     Default: 10.0.3.0/24
@@ -215,10 +212,6 @@ Resources:
           Value: !Sub '${AWS::StackName}-RDS-access'
       VpcId: !Ref VPC
       SecurityGroupIngress:
-        - CidrIp: !Ref DBIngressIP
-          FromPort: 0
-          IpProtocol: tcp
-          ToPort: 65535
         - CidrIp: !Ref VPCCidrBlock
           FromPort: 0
           IpProtocol: tcp
