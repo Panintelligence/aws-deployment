@@ -7,18 +7,17 @@
 
 
 ## Prerequisite 
-Edit the parameters for each json file to pass the value into the yaml scripts. Some values are set to default.
 
 ## Create the key pair
 
-This is an example of creating a keypair that you can use
+This is an example of creating a keypair that you can use. 
 ```BASH
 aws ec2 create-key-pair --key-name Panintelligence --query 'KeyMaterial' --output text > Panintelligence.pem
-chmod 400 MyKeyPair.pem
+chmod 400 Panintelligence.pem
 ```
 
 ## Setting the parameters:
-infrastructure_setup_one:
+
 ```BASH
 VPCCIDRBLOCK=10.0.0.0/16
 PUBLICZONEACIDRBLOCK=10.0.1.0/24
