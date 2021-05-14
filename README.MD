@@ -12,17 +12,17 @@ Edit the parameters for each json file to pass the value into the yaml scripts. 
 ## Setting the parameters:
 infrastructure_setup_one:
 ```BASH
-VPCCIDRBLOCK="10.0.0.0/16"
-PUBLICZONEACIDRBLOCK="10.0.1.0/24"
-PUBLICZONEBCIDRBLOCK="10.0.1.0/24"
-DASHBOARDCIDRBLOCK="10.0.0.0/24"
-AVAILABILITYZONEA="eu-west-1a"
-AVAILABILITYZONEB="eu-west-1b"
-RDSUSERNAME="dashboard"
-RDSPASSWORD="5up3r53cur3P455w0rd!"
-DBNAME="dashboard"
-RDSPUBLICA="10.0.3.0/24"
-RDSPUBLICB="10.0.3.0/24"
+VPCCIDRBLOCK=10.0.0.0/16
+PUBLICZONEACIDRBLOCK=10.0.1.0/24
+PUBLICZONEBCIDRBLOCK=10.0.1.0/24
+DASHBOARDCIDRBLOCK=10.0.0.0/24
+AVAILABILITYZONEA=eu-west-1a
+AVAILABILITYZONEB=eu-west-1b
+RDSUSERNAME=dashboard
+RDSPASSWORD=5up3r53cur3P455w0rd!
+DBNAME=dashboard
+RDSPUBLICA=10.0.3.0/24
+RDSPUBLICB=10.0.3.0/24
 ACMCERTARN=<paste your ACM ARN here>
 ```
 S3_creation:
@@ -32,9 +32,9 @@ S3BUCKETNAME = <Enter bucket name so you can upload lambda zip>
 
 Infrastructure set up two: 
 ```BASH
-ENCRYPTION = "true"
+ENCRYPTION=true
 FILESYSTEMNAME = <Give a name for your EFS>
-PERFORMANCEMODE = "generalPurpose"
+PERFORMANCEMODE=generalPurpose
 S3LAMBDABUCKET = <Enter the S3 bucket name that you have created for lambda zip>
 ```
 Infrastructure_setup_three: 
