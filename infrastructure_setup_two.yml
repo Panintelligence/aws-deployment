@@ -41,7 +41,8 @@ Resources:
       Handler: lambda_handler.lambda_handler
       Role: !GetAtt LambdaRole.Arn
       Code:
-        S3Bucket: 'Fn::ImportValue': S3BucketLambda
+        S3Bucket: 
+          'Fn::ImportValue': S3BucketLambda
         S3Key: lambda.zip
       Runtime: python3.8
       Timeout: 15
