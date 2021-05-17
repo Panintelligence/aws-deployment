@@ -129,7 +129,7 @@ Resources:
           Permissions: '777'
         Path: '/'
         
-LambdaExecute:
+  LambdaExecute:
     Type: AWS::IAM::Policy
     Properties:
       PolicyName: panintelligence-lambda-execute
@@ -148,7 +148,7 @@ LambdaExecute:
             Resource:
               - !Sub 'arn:aws:s3:::${Bucket}/*'
               - !Sub 'arn:aws:s3:::${Bucket}'
-      Roles:
+      Roles: 
         - !Ref LambdaRole
 
   Bucket:
