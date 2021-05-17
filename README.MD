@@ -64,7 +64,7 @@ aws s3 cp lambda.zip s3://{$S3BUCKETNAME}
 -  Next onto the lambda function deployment
 
 ```BASH
-aws cloudformation create-stack --stack-name PanintelligenceTwo --template-body file://infrastructure_setup_two.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME ParameterKey=PerformanceMode,ParameterValue=$PERFORMANCEMODE ParameterKey=S3lambdabucket,ParameterValue=$S3LAMBDABUCKET --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name PanintelligenceTwo --template-body file://infrastructure_setup_two.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM
 ```
 Wait until the stack is built (eta 2 minutes), check the status with this command:
 ```BASH
