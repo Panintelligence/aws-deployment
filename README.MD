@@ -75,7 +75,7 @@ aws cloudformation describe-stacks --stack-name PanintelligenceTwo | jq '.Stacks
 We will need to update the stack for PanintelligenceTwo:
 
 ```BASH
-aws cloudformation create-stack --stack-name PanintelligenceTwo --template-body file://infrastructure_setup_two_updated.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation update-stack --stack-name PanintelligenceTwo --template-body file://infrastructure_setup_two_updated.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM
 ```
 Wait until the stack is built (eta 2 minutes), check the status with this command:
 ```BASH
