@@ -80,7 +80,7 @@ aws cloudformation describe-stacks --stack-name PanintelligenceThree | jq '.Stac
 ```
 Once this is done, please update it with this script:
 ```BASH
-aws cloudformation update-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three_update.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation update-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three_updated.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
 ```
 Wait until the stack is built (eta 2 minutes), check the status with this command:
 ```BASH
