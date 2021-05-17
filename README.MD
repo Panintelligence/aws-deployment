@@ -90,10 +90,7 @@ aws cloudformation describe-stacks --stack-name PanintelligenceThree | jq '.Stac
 ```
 
  Now upload the themes and images to s3 that was created in step 5.
-it should look like "panintelligence-{aws-region}-{aws-accountid}
-```BASH
-aws s3 ls
-```
+
 ```BASH
 cd /resources/
 ```
