@@ -67,7 +67,6 @@ Resources:
               echo "export PI_DB_USERNAME=${DBUsername}" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_EXTERNAL_DB='true'" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_LICENCE='${DashboardLicenceKey}'" >> /opt/pi/Dashboard/startup.sh
-              echo cd /opt/pi/Dashboard >> /opt/pi/Dashboard/startup.sh
               echo "/opt/pi/Dashboard/dashboard.sh all start" >> /opt/pi/Dashboard/startup.sh
               crontab -u pi-user -r
               lines="@reboot /bin/bash /opt/pi/Dashboard/startup.sh"
