@@ -642,3 +642,9 @@ Outputs:
     Value: !Ref PublicRouteTable
     Export:
       Name: RouteTable
+
+  PrivateRouteTable:
+    Description: Panintelligence route table
+    Value: !Ref PrivateRouteTable
+    Export:
+      Name: PrivateRouteTable
