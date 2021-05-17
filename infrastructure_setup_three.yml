@@ -46,21 +46,12 @@ Resources:
               mount -a -t nfs4
               mkdir -p /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
               touch /opt/pi/Dashboard/startup.sh
-              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
-              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
-              ln -s /mnt/efs/images /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
-              ln -s /mnt/efs/themes /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
-              ln -s /mnt/efs/excel-data /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
-              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
-              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
-              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
-              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
-              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
-              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
               sed -i 's/cacheMaxSize="20000"/cacheMaxSize="20000" allowLinking="true"/g' /opt/pi/Dashboard/tomcat/conf/context.xml
               chmod +rx /opt/pi/Dashboard/startup.sh
               echo "#!/usr/bin/bash" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_HOST=${DBHost}" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_STYLES_EXTERNAL_THEME_PATH='/mnt/efs/themes'" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_STYLES='piBerry'" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_PASSWORD=${DBPassword}" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_PORT=${DBPort}" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_SCHEMA_NAME='dashboard'" >> /opt/pi/Dashboard/startup.sh
