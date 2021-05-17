@@ -72,6 +72,8 @@ Resources:
               crontab -u pi-user -r
               lines="@reboot /bin/bash /opt/pi/Dashboard/startup.sh"
               echo "$lines" | crontab -u pi-user -
+              su -c "/opt/pi/Dashboard/dashboard.sh all stop" - pi-user
+              su -c "/opt/pi/Dashboard/startup.sh" - pi-user
             - EfsFileSystemId: !ImportValue FileSystem
               DBHost: !ImportValue MyDBEndPoint
               DBPassword: !ImportValue RDSPassword
