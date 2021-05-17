@@ -148,8 +148,7 @@ LambdaExecute:
             Resource:
               - !Sub 'arn:aws:s3:::${Bucket}/*'
               - !Sub 'arn:aws:s3:::${Bucket}'
-      Roles:
-        - !Ref LambdaRole
+      Roles: !Ref LambdaRole
 
   Bucket:
     Type: AWS::S3::Bucket
