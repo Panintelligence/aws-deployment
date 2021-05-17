@@ -151,7 +151,7 @@ Resources:
               - !Sub 'arn:aws:s3:::${Bucket}/*'
               - !Sub 'arn:aws:s3:::${Bucket}'
       RouteTableIds:
-        - Fn::ImportValue: RouteTable
+        - Fn::ImportValue: PrivateRouteTable
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
       VpcId: 
         Fn::ImportValue: VPC-ID
