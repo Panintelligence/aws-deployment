@@ -36,6 +36,8 @@ FILESYSTEMNAME=<Give a name for your EFS>
 AMIID=<Enter Panintelligence AMI here>
 KEYPAIRNAME=<Enter your Key pair name here>
 DASHBOARDLICENCEKEY=<Paste your licence key here, make sure it's in line>
+REGION=$(aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]')
+ACCOUNT_ID=$(aws sts get-caller-identity --output text --query '[Account]')
 ```
 ## Run these commands 
 
