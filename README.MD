@@ -98,10 +98,10 @@ aws s3 ls
 cd /resources/
 ```
 ```BASH
-aws s3 cp themes s3://{BUCKET_NAME_HERE]
+aws s3 cp themes s3://panintelligence---${REGION}--${ACCOUNT_ID}/themes --recursive
 ```
 ```BASH
-aws s3 cp images s3://{BUCKET_NAME_HERE]
+aws s3 cp images s3://panintelligence---${REGION}--${ACCOUNT_ID}/images --recursive
 ```
 
 
