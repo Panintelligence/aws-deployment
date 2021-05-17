@@ -81,6 +81,17 @@ Wait until the stack is built (eta 2 minutes), check the status with this comman
 ```BASH
 aws cloudformation describe-stacks --stack-name PanintelligenceTwo | jq '.Stacks[0].StackStatus'
 ```
+ Now upload the themes and images to s3 
+
+```BASH
+cd /resources/
+```
+```BASH
+aws s3 cp themes s3://panintelligence---${REGION}--${ACCOUNT_ID}/themes --recursive
+```
+```BASH
+aws s3 cp images s3://panintelligence---${REGION}--${ACCOUNT_ID}/images --recursive
+
 
 -  We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
 ```BASH
@@ -91,16 +102,7 @@ Wait until the stack is built (eta 2 minutes), check the status with this comman
 aws cloudformation describe-stacks --stack-name PanintelligenceThree | jq '.Stacks[0].StackStatus'
 ```
 
- Now upload the themes and images to s3 that was created in step 5.
 
-```BASH
-cd /resources/
-```
-```BASH
-aws s3 cp themes s3://panintelligence---${REGION}--${ACCOUNT_ID}/themes --recursive
-```
-```BASH
-aws s3 cp images s3://panintelligence---${REGION}--${ACCOUNT_ID}/images --recursive
 ```
 
 
