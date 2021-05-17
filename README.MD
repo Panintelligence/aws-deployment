@@ -72,17 +72,19 @@ Wait until the stack is built (eta 2 minutes), check the status with this comman
 ```BASH
 aws cloudformation describe-stacks --stack-name PanintelligenceTwo | jq '.Stacks[0].StackStatus'
 ```
--  We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
+We will need to update the stack for PanintelligenceTwo:
+
 ```BASH
-aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name PanintelligenceTwo --template-body file://infrastructure_setup_two_updated.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM
 ```
 Wait until the stack is built (eta 2 minutes), check the status with this command:
 ```BASH
-aws cloudformation describe-stacks --stack-name PanintelligenceThree | jq '.Stacks[0].StackStatus'
+aws cloudformation describe-stacks --stack-name PanintelligenceTwo | jq '.Stacks[0].StackStatus'
 ```
-Once this is done, please update it with this script:
+
+-  We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
 ```BASH
-aws cloudformation update-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three_updated.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
 ```
 Wait until the stack is built (eta 2 minutes), check the status with this command:
 ```BASH
