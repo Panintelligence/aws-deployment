@@ -91,9 +91,10 @@ aws s3 cp themes s3://panintelligence---${REGION}--${ACCOUNT_ID}/themes --recurs
 ```
 ```BASH
 aws s3 cp images s3://panintelligence---${REGION}--${ACCOUNT_ID}/images --recursive
-
+```
 
 -  We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
+
 ```BASH
 aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
 ```
@@ -103,6 +104,20 @@ aws cloudformation describe-stacks --stack-name PanintelligenceThree | jq '.Stac
 ```
 
 
+
+
+## How to tear down your cloudformation stack safely: 
+
+```
+aws cloudformation delete-stack --stack-name PanintelligenceThree
+```
+
+```
+aws cloudformation delete-stack --stack-name PanintelligenceTwo
+```
+
+```
+aws cloudformation delete-stack --stack-name PanintelligenceOne
 ```
 
 
