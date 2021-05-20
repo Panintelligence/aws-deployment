@@ -65,7 +65,7 @@ Wait until the stack is built (eta 2 minutes), check the status with this comman
 -  The S3 bucket that you have created, copy the lambda.zip to that bucket
 
 ```BASH
-aws s3 cp dist/lambda.zip s3://{$S3BUCKETNAME}
+aws s3 cp dist/lambda.zip s3://${S3BUCKETNAME}
 ```
 
 -  Next onto the lambda function deployment
