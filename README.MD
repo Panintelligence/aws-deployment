@@ -89,10 +89,10 @@ Wait until the stack is built (eta 2 minutes), check the status with this comman
  Now upload the themes and images to s3 
 
 ```BASH
-aws s3 cp /resources/themes s3://panintelligence---${REGION}--${ACCOUNT_ID}/themes --recursive
+aws s3 cp resources/themes s3://panintelligence---${REGION}--${ACCOUNT_ID}/themes --recursive
 ```
 ```BASH
-aws s3 cp /resources/images s3://panintelligence---${REGION}--${ACCOUNT_ID}/images --recursive
+aws s3 cp resources/images s3://panintelligence---${REGION}--${ACCOUNT_ID}/images --recursive
 ```
 
 -  We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
