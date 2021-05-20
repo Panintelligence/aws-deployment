@@ -39,7 +39,7 @@ Parameters:
     Type: String
     Default: 10.0.3.0/24
     Description: The subnet for RDS availibility a
-  RDSPPrivateB:
+  RDSPrivateB:
     Type: String
     Default: 10.0.4.0/24
     Description: The subnet for RDS availibility b
