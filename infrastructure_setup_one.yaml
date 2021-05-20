@@ -35,11 +35,11 @@ Parameters:
     Type: String
     Default: panintelligence
     Description: The name of the database
-  RDSPublicA:
+  RDSPrivateA:
     Type: String
     Default: 10.0.3.0/24
     Description: The subnet for RDS availibility a
-  RDSPublicB:
+  RDSPPrivateB:
     Type: String
     Default: 10.0.4.0/24
     Description: The subnet for RDS availibility b
@@ -113,23 +113,23 @@ Resources:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Private-A'
 
-  RDSPublicACidr:
+  RDSPrivateACidr:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
       CidrBlock:
-        Ref: RDSPublicA
+        Ref: RDSPrivateA
       AvailabilityZone: !Ref AvailabilityZoneA
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-rds-public-a'
 
-  RDSPublicBCidr:
+  RDSPrivateBCidr:
     Type: 'AWS::EC2::Subnet'
     Properties:
       VpcId: !Ref VPC
       CidrBlock:
-        Ref: RDSPublicB
+        Ref: RDSPrivateB
       AvailabilityZone: !Ref AvailabilityZoneB
       Tags:
         - Key: Name
@@ -163,13 +163,13 @@ Resources:
   RDSSubnetARouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
-      SubnetId: !Ref RDSPublicACidr
+      SubnetId: !Ref RDSPrivateACidr
       RouteTableId: !Ref PublicRouteTable
 
   RDSSubnetBRouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
-      SubnetId: !Ref RDSPublicBCidr
+      SubnetId: !Ref RDSPrivateBCidr
       RouteTableId: !Ref PublicRouteTable
 
   PublicSubnetARouteTableAssociation:
@@ -310,8 +310,8 @@ Resources:
       DBSubnetGroupDescription: panintelligence subnet group
       DBSubnetGroupName: Panintelligence
       SubnetIds:
-        - !Ref RDSPublicACidr
-        - !Ref RDSPublicBCidr
+        - !Ref RDSPrivateACidr
+        - !Ref RDSPrivateBCidr
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Subnet-group'
