@@ -49,7 +49,7 @@ aws ec2 create-key-pair --key-name $KEYPAIRNAME --query 'KeyMaterial' --output t
 
 - build lambda script
 ```
-./lam
+./build_lambda.sh
 ```
 
 -  This script builds the infrastructure of VPC and networking side
