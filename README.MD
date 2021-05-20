@@ -16,7 +16,7 @@ cd aws-deployment
 
 
 ## Setting the parameters:
-
+### Don't make your bucket with hyphens
 ```BASH
 VPCCIDRBLOCK=10.0.0.0/16
 PUBLICZONEACIDRBLOCK=10.0.1.0/24
