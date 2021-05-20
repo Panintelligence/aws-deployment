@@ -61,7 +61,7 @@ Resources:
               chmod +rx /opt/pi/Dashboard/startup.sh
               echo "#!/usr/bin/bash" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_HOST=${DBHost}" >> /opt/pi/Dashboard/startup.sh
-              echo "export PI_DB_PASSWORD=dashboard12" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_PASSWORD=${DBPassword}" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_PORT=${DBPort}" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_SCHEMA_NAME='dashboard'" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_USERNAME=${DBUsername}" >> /opt/pi/Dashboard/startup.sh
