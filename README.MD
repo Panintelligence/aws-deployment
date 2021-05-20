@@ -98,7 +98,7 @@ aws s3 cp resources/images s3://panintelligence---${REGION}--${ACCOUNT_ID}/image
 -  We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
 
 ```BASH
-aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue=$DASHBOARDLICENCEKEY --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue="${DASHBOARDLICENCEKEY}" --capabilities CAPABILITY_NAMED_IAM
 ```
 Wait until the stack is built (eta 2 minutes), check the status with this command and wait for "CREATE_COMPLETE":
 ```BASH
