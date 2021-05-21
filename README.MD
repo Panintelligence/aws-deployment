@@ -2,22 +2,24 @@
 
 - Log into AWS management console
 - Go into AWS Cloudshell
+- Follow the list of instructions below
 
+## Cloning our Github Repo
 
-## Prerequisite 
+Clone our Github project to your cloudshell.
 
-## Git clone
-```BASH
+```bash
 mkdir panintelligence
 cd panintelligence
 git clone https://github.com/Panintelligence/aws-deployment.git
 cd aws-deployment
 ```
 
+## Setting the Parameters
 
-## Setting the parameters:
-### Don't make your bucket with hyphens
-```BASH
+> PLEASE NOTE!  your s3 bucket name must be url safe!
+
+```bash
 VPCCIDRBLOCK=10.0.0.0/16
 PUBLICZONEACIDRBLOCK=10.0.1.0/24
 PUBLICZONEBCIDRBLOCK=10.0.2.0/24
@@ -30,105 +32,87 @@ DBNAME=dashboard
 RDSPRIVATEA=10.0.3.0/24
 RDSPRIVATEB=10.0.4.0/24
 ACMCERTARN=<paste your ACM ARN here>
-S3BUCKETNAME=<Enter bucket name so you can upload lambda zip>
+S3BUCKETNAME= ** This bucket will be where the lambda deployment scripts are based**
 ENCRYPTION=true
 FILESYSTEMNAME=<Give a name for your EFS>
-AMIID=<Enter Panintelligence AMI here>
-KEYPAIRNAME=<Enter your Key pair name here>
+AMIID=<Enter Panintelligence Marketplace AMI here>
+KEYPAIRNAME=<choose a unique key pair>
 DASHBOARDLICENCEKEY=<Paste your licence key here, make sure it's in line>
 REGION=$(aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]')
 ACCOUNT_ID=$(aws sts get-caller-identity --output text --query '[Account]')
 ```
 
-
-## Run these commands 
+## Creating your AWS Panintelligence instance
 
 - chmod the bash scripts: 
-```BASH
+```bash
 chmod +x *.sh
 ```
+This will create a key pair.  If running these scripts from AWS cloudshell, you can download this pem using the download option to the top right dropdown.  To SSH to your instance, you can use SSM (click the connect button in the EC2 interface).  You should keep this key safe in case you lose access via the SSM method.
+If you already have a keypair which you will be using, you will not need to use this script to create another.
 
-- Create the keypair
-This is an example of creating a keypair that you can use. 
-```BASH
+```bash
 aws ec2 create-key-pair --key-name $KEYPAIRNAME --query 'KeyMaterial' --output text > $KEYPAIRNAME.pem
 ```
 
+This script will build the deployment package for the side load lambda function
 
-- build lambda script to zip lambda function
 ```
 ./build_lambda.sh
 ```
 
--  This script builds the infrastructure of VPC and networking side
-``` BASH
+The first script builds VPC, database and everything required for your AWS Panintelligence instance.
+``` bash
 aws cloudformation create-stack --stack-name PanintelligenceOne --template-body file://infrastructure_setup_one.yml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DashboardCidrBlock,ParameterValue=$DASHBOARDCIDRBLOCK ParameterKey=AvailabilityZoneA,ParameterValue=$AVAILABILITYZONEA ParameterKey=AvailabilityZoneB,ParameterValue=$AVAILABILITYZONEB ParameterKey=RDSUsername,ParameterValue=$RDSUSERNAME ParameterKey=RDSPassword,ParameterValue=$RDSPASSWORD ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPrivateA,ParameterValue=$RDSPRIVATEA ParameterKey=RDSPrivateB,ParameterValue=$RDSPRIVATEB ParameterKey=ACMCertArn,ParameterValue=$ACMCERTARN ParameterKey=S3BucketName,ParameterValue=$S3BUCKETNAME --capabilities CAPABILITY_NAMED_IAM
-```
-
-Wait until the stack is built (eta 2 minutes), check the status with this command and wait for "CREATE_COMPLETE":
-```BASH
 ./check_stack.sh PanintelligenceOne
 ```
 
--  The S3 bucket that you have created, copy the lambda.zip to that bucket
+We're now going to copy the lambda code to AWS, ready for deployment.
 
-```BASH
+```bash
 aws s3 cp dist/lambda.zip s3://${S3BUCKETNAME}
 ```
 
--  Next onto the lambda function deployment
+The next script is going to create our side load lambda function which is to help you move themes and images to customise your AWS Panintelligence system.
 
-```BASH
+```bash
 aws cloudformation create-stack --stack-name PanintelligenceTwo --template-body file://infrastructure_setup_two.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM
-```
-Wait until the stack is built (eta 2 minutes), check the status with this command and wait for "CREATE_COMPLETE":
-```BASH
 ./check_stack.sh PanintelligenceTwo
 ```
-We will need to update the stack for PanintelligenceTwo:
 
-```BASH
+Now we're going to update the stack because of a circular dependency on the s3 bucket and lambda dependency (both need to be created before we can attach the trigger to the s3 bucket.)
+
+```bash
 aws cloudformation update-stack --stack-name PanintelligenceTwo --template-body file://infrastructure_setup_two_updated.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM
-```
-Wait until the stack is built (eta 2 minutes), check the status with this command and wait for "CREATE_COMPLETE":
-```BASH
 ./check_stack_update.sh PanintelligenceTwo
 ```
- Now upload the themes and images to s3 
 
-```BASH
+We need to create some default themes for s3.  If you want to create your own, you can find instructions for this at www.panintelligence.com
+
+```bash
 aws s3 cp resources/themes s3://panintelligence---${REGION}--${ACCOUNT_ID}/themes --recursive
-```
-```BASH
 aws s3 cp resources/images s3://panintelligence---${REGION}--${ACCOUNT_ID}/images --recursive
 ```
 
--  We will need to deploy the AMI. As there is a circular dependency we will need to update it afterwards. 
+In the next step, we're going to create an autoscaling group and a launch configuration which will run a specified (default 1) number of Panintelligence instances inside your newly created infrastructure.
 
-```BASH
+```bash
 aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue="${DASHBOARDLICENCEKEY}" --capabilities CAPABILITY_NAMED_IAM
-```
-Wait until the stack is built (eta 2 minutes), check the status with this command and wait for "CREATE_COMPLETE":
-```BASH
 ./check_stack.sh PanintelligenceThree
 ```
 
 ## How to tear down your cloudformation stack safely: 
 Please empty the S3 buckets before deleting the stacks. Beaware you are deleting the files inside the bucket, please make sure you have a backup of files.
-```
+```bash
 aws s3 rm s3://panintelligence---${REGION}--${ACCOUNT_ID} --recursive
 aws s3 rm s3://${S3BUCKETNAME} --recursive
 ```
 
-```
+Please ensure the stacks are deleted prior to running the next.  Please run these sequentially to ensure there's no additional hanging resources.
+
+```bash
 aws cloudformation delete-stack --stack-name PanintelligenceThree
-```
-
-```
 aws cloudformation delete-stack --stack-name PanintelligenceTwo
-```
-
-```
 aws cloudformation delete-stack --stack-name PanintelligenceOne
 ```
 
