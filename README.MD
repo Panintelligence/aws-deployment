@@ -105,7 +105,7 @@ aws cloudformation create-stack --stack-name PanintelligenceThree --template-bod
 ./check_stack.sh PanintelligenceThree
 ```
 
-## How to tear down your cloudformation stack safely: 
+## How to Clean up your AWS Marketplace Panintelligence 
 Please empty the S3 buckets before deleting the stacks. Beaware you are deleting the files inside the bucket, please make sure you have a backup of files.
 ```bash
 aws s3 rm s3://panintelligence---${REGION}--${ACCOUNT_ID} --recursive
