@@ -39,13 +39,21 @@ DASHBOARDLICENCEKEY=<Paste your licence key here, make sure it's in line>
 REGION=$(aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]')
 ACCOUNT_ID=$(aws sts get-caller-identity --output text --query '[Account]')
 ```
+
+
 ## Run these commands 
+
+- chmod the bash scripts: 
+```BASH
+chmod +x *.sh
+```
 
 - Create the keypair
 This is an example of creating a keypair that you can use. 
 ```BASH
 aws ec2 create-key-pair --key-name $KEYPAIRNAME --query 'KeyMaterial' --output text > $KEYPAIRNAME.pem
 ```
+
 
 - build lambda script to zip lambda function
 ```
