@@ -114,6 +114,7 @@ Wait until the stack is built (eta 2 minutes), check the status with this comman
 ```
 
 ## How to tear down your cloudformation stack safely: 
+Please empty the S3 buckets before deleting the stacks. Beaware you are deleting the files inside the bucket, please make sure you have a backup of files.
 ```
 aws s3 rm s3://panintelligence---${REGION}--${ACCOUNT_ID} --recursive
 aws s3 rm s3://${S3BUCKETNAME} --recursive
