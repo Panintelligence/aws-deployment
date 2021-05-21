@@ -92,7 +92,7 @@ aws cloudformation update-stack --stack-name PanintelligenceTwo --template-body 
 ```
 Wait until the stack is built (eta 2 minutes), check the status with this command and wait for "CREATE_COMPLETE":
 ```BASH
-./check_stack.sh PanintelligenceTwo
+./check_stack_update.sh PanintelligenceTwo
 ```
  Now upload the themes and images to s3 
 
