@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 
-# Maybe move the target group from phase 1 to phase 3 to add instance as target or have a condition when instance is created  then populate target
 Parameters:
 
   AMIID:
@@ -15,7 +14,6 @@ Parameters:
     Description: The Dashboard licence key, please obtain that from Panintelligence account manager
 Resources:
 
- # attach role to instance profile to instance
   MyInstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
