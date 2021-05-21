@@ -48,7 +48,7 @@ Please ensure you remove all carriage return line feeds and leading white space 
 
 ## Creating your AWS Panintelligence instance
 
-- chmod the bash scripts: 
+You will need to add execute to the bash scripts so you can run them in cloudshell.
 ```bash
 chmod +x *.sh
 ```
