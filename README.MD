@@ -114,6 +114,10 @@ Wait until the stack is built (eta 2 minutes), check the status with this comman
 ```
 
 ## How to tear down your cloudformation stack safely: 
+```
+aws s3 rm s3://panintelligence---${REGION}--${ACCOUNT_ID} --recursive
+aws s3 rm s3://${S3BUCKETNAME} --recursive
+```
 
 ```
 aws cloudformation delete-stack --stack-name PanintelligenceThree
