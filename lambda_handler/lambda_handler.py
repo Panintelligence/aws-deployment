@@ -105,6 +105,11 @@ def copy_file(source_file, target_file_name):
         logger.error("Error when copying file into efs there is an empty directory")
         logger.error(type_error)
 
+def change_file_permission(target_file_name):
+    '''change the owner of the target file'''
+    target_file = os.path.join(os.path.sep, 'mnt/efs', target_file_name)
+    os.chmod(target_file, 0o777)
+
 class EfsTrigger:
     '''EFS lambda trigger code'''
     def __init__(self):
@@ -137,6 +142,7 @@ class EfsTrigger:
             target_dir = get_dir_from_object_key(source_object_key)
             source_file = self.download_from_s3(source_bucket, source_object_key, target_file_name)
             copy_file(source_file, target_dir)
+            change_file_permission(target_dir)
 
 def main():
     ''' initialising lambda function'''
