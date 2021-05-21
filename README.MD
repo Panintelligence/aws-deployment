@@ -34,13 +34,17 @@ RDSPRIVATEB=10.0.4.0/24
 ACMCERTARN=<paste your ACM ARN here>
 S3BUCKETNAME= ** This bucket will be where the lambda deployment scripts are based**
 ENCRYPTION=true
-FILESYSTEMNAME=<Give a name for your EFS>
-AMIID=<Enter Panintelligence Marketplace AMI here>
-KEYPAIRNAME=<choose a unique key pair>
-DASHBOARDLICENCEKEY=<Paste your licence key here, make sure it's in line>
+FILESYSTEMNAME= ** EFS volume name**
+AMIID= ** Enter Panintelligence Marketplace AMI here **
+KEYPAIRNAME= ** your EC2 keypair name**
+DASHBOARDLICENCEKEY= ** Paste your licence key here, make sure it's in line **
 REGION=$(aws ec2 describe-availability-zones --output text --query 'AvailabilityZones[0].[RegionName]')
 ACCOUNT_ID=$(aws sts get-caller-identity --output text --query '[Account]')
 ```
+
+### Making your licence key compatible
+
+Please ensure you remove all carriage return line feeds and leading white space from your licence.  It should fit entirely on one line.  If you're running a trial, developer or deploy version of Panintelligence, you will not need to supply this licence here as a licence is provided for you with the AMI.  More documentation can be found at www.panintelligence.com relating to this matter.
 
 ## Creating your AWS Panintelligence instance
 
