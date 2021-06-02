@@ -99,9 +99,15 @@ aws s3 cp resources/images s3://panintelligence---${REGION}--${ACCOUNT_ID}/image
 ```
 
 In the next step, we're going to create an autoscaling group and a launch configuration which will run a specified (default 1) number of Panintelligence instances inside your newly created infrastructure.
+### If you are using a lincence key, please use the script below: 
 
 ```bash
 aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue="${DASHBOARDLICENCEKEY}" --capabilities CAPABILITY_NAMED_IAM
+./check_stack.sh PanintelligenceThree
+```
+### If you are not using a licence key, please use the script below:
+```bash
+aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME --capabilities CAPABILITY_NAMED_IAM
 ./check_stack.sh PanintelligenceThree
 ```
 
