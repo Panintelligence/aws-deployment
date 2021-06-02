@@ -17,7 +17,7 @@ cd aws-deployment
 
 ## Setting the Parameters
 
-> PLEASE NOTE!  your s3 bucket name must be url safe!
+> PLEASE NOTE!  your s3 bucket name must be url safe! Also only use DASHBOARDLICENCEKEY if you are inputting your own licence key.
 
 ```bash
 VPCCIDRBLOCK=10.0.0.0/16
