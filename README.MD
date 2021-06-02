@@ -107,7 +107,7 @@ aws cloudformation create-stack --stack-name PanintelligenceThree --template-bod
 ```
 ### If you are not using a licence key, please use the script below:
 ```bash
-aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three_wol.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME --capabilities CAPABILITY_NAMED_IAM
 ./check_stack.sh PanintelligenceThree
 ```
 
