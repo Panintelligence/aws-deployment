@@ -1,6 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-
 Parameters:
 
   AMIID:
@@ -96,3 +95,54 @@ Resources:
         - Key: Name
           Value: Panintelligence
           PropagateAtLaunch: "true"
+          
+  myScaleOutPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref PanintelligenceAutoscalingGroup
+      ScalingAdjustment: '1'
+ 
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '1'
+      Statistic: Average
+      Threshold: '70'
+      AlarmDescription: Alarm if CPU too high or metric disappears indicating instance
+        is down
+      Period: '60'
+      AlarmActions:
+      - !Ref myScaleOutPolicy
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Ref: PanintelligenceAutoscalingGroup
+      ComparisonOperator: GreaterThanThreshold
+      MetricName: CPUUtilization
+      
+  myScaleInPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref PanintelligenceAutoscalingGroup
+      ScalingAdjustment: '-1'
+      
+  CPUAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '2'
+      Statistic: Average
+      Threshold: '10'
+      AlarmDescription: Alarm if CPU too low or metric disappears indicating instance
+        is down
+      Period: '60'
+      AlarmActions:
+      - !Ref myScaleInPolicy
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Ref: PanintelligenceAutoscalingGroup
+      ComparisonOperator: LessThanThreshold
