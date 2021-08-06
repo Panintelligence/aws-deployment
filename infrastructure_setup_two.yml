@@ -27,6 +27,7 @@ Resources:
           ToPort: '2049'
           CidrIp:
             'Fn::ImportValue': VPC-CidrBlock
+
   S3ToEFSLambda:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -52,8 +53,12 @@ Resources:
         SecurityGroupIds:
           - !Ref EFSMountTarget
         SubnetIds:
-          - 'Fn::ImportValue': DashboardSubnet
-    DependsOn: MountTarget1
+          - 'Fn::ImportValue': DashboardSubnetA
+          - 'Fn::ImportValue': DashboardSubnetB
+    DependsOn: 
+      - MountTargetDashboardA
+      - MountTargetDashboardB
+    
   LambdaRole:
     Type: 'AWS::IAM::Role'
     Properties:
@@ -68,6 +73,7 @@ Resources:
                 - lambda.amazonaws.com
         Version: 2012-10-17
       Path: /
+      
   ListBucketPolicies:
     Type: 'AWS::IAM::Policy'
     Properties:
@@ -85,6 +91,7 @@ Resources:
             Resource: '*'
       Roles:
         - !Ref LambdaRole
+        
   FileSystem:
     Type: 'AWS::EFS::FileSystem'
     Properties:
@@ -93,14 +100,26 @@ Resources:
         - Key: Name
           Value: !Ref FileSystemName
       PerformanceMode: generalPurpose
-  MountTarget1:
+      
+
+  MountTargetDashboardA:
     Type: 'AWS::EFS::MountTarget'
     Properties:
       FileSystemId: !Ref FileSystem
       SubnetId:
-        'Fn::ImportValue': DashboardSubnet
+        'Fn::ImportValue': DashboardSubnetA
       SecurityGroups:
         - !Ref EFSMountTarget
+        
+  MountTargetDashboardB:
+    Type: 'AWS::EFS::MountTarget'
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId:
+        'Fn::ImportValue': DashboardSubnetB
+      SecurityGroups:
+        - !Ref EFSMountTarget
+        
   EFSPolicy:
     Type: 'AWS::IAM::Policy'
     Properties:
@@ -115,6 +134,7 @@ Resources:
               - !GetAtt FileSystem.Arn
       Roles:
         - !Ref LambdaRole
+        
   AccessPointResource:
     Type: 'AWS::EFS::AccessPoint'
     Properties:
