@@ -7,15 +7,19 @@ Parameters:
     Description: The cider block for the VPC
   PublicZoneACidrBlock:
     Type: String
-    Default: 10.0.1.0/24
+    Default: 10.0.2.0/24
     Description: The public cider block for availbility zone A that will be attached to ALB
   PublicZoneBCidrBlock:
     Type: String
-    Default: 10.0.2.0/24
+    Default: 10.0.3.0/24
     Description: The public cider block for availbility zone B that will be attached to ALB
-  DashboardCidrBlock:
+  DashboardCidrBlockZoneA:
     Type: String
     Default: 10.0.0.0/24
+    Description: The cider block for private access within the VPC that the EC2 instance will use
+  DashboardCidrBlockZoneB:
+    Type: String
+    Default: 10.0.1.0/24
     Description: The cider block for private access within the VPC that the EC2 instance will use
   AvailabilityZoneA:
     Type: String
@@ -37,11 +41,11 @@ Parameters:
     Description: The name of the database
   RDSPrivateA:
     Type: String
-    Default: 10.0.3.0/24
+    Default: 10.0.4.0/24
     Description: The subnet for RDS availibility a
   RDSPrivateB:
     Type: String
-    Default: 10.0.4.0/24
+    Default: 10.0.5.0/24
     Description: The subnet for RDS availibility b
   ACMCertArn:
     Type: String
@@ -49,9 +53,9 @@ Parameters:
   S3BucketName:
     Type: String
     Description: S3 bucket name
+
   
 Resources:
-  ######################### CHECKED #################################################
   # Create the VPC with DNS enabled
   S3Bucket:
     Type: 'AWS::S3::Bucket'
@@ -107,11 +111,22 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock:
-        Ref: DashboardCidrBlock
+        Ref: DashboardCidrBlockZoneA
       AvailabilityZone: !Ref AvailabilityZoneA
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Private-A'
+
+  PrivateSubnetB:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        Ref: DashboardCidrBlockZoneB
+      AvailabilityZone: !Ref AvailabilityZoneB
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Private-B'
 
   RDSPrivateACidr:
     Type: 'AWS::EC2::Subnet'
@@ -134,7 +149,7 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub '${AWS::StackName}-rds-public-b'
-
+          
   # Create the route tables
   PublicRouteTable:
     Type: 'AWS::EC2::RouteTable'
@@ -159,6 +174,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
+      
   # Associate subnets to route tables
   RDSSubnetARouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
@@ -184,12 +200,18 @@ Resources:
       SubnetId: !Ref PublicSubnetB
       RouteTableId: !Ref PublicRouteTable
 
-  PriivateSubnetRouteTableAssociation:
+  PrivateASubnetRouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
       SubnetId: !Ref PrivateSubnetA
       RouteTableId: !Ref PrivateRouteTable
 
+  PrivateBSubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetB
+      RouteTableId: !Ref PrivateRouteTable
+      
   # Create the security groups
   ALBSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -221,11 +243,6 @@ Resources:
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - CidrIp: !Ref VPCCidrBlock
-          FromPort: 0
-          IpProtocol: tcp
-          ToPort: 65535
-      SecurityGroupEgress:
-        - CidrIp: 0.0.0.0/0
           FromPort: 3306
           IpProtocol: tcp
           ToPort: 3306
@@ -285,7 +302,19 @@ Resources:
        RuleNumber: 300
        Protocol: 6
        RuleAction: allow
-       CidrBlock: !Ref DashboardCidrBlock
+       CidrBlock: !Ref DashboardCidrBlockZoneA
+       PortRange:
+         From: 1024
+         To: 65535
+
+  InboundRuleCustom:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+       NetworkAclId: !Ref PanintelligencePublic
+       RuleNumber: 400
+       Protocol: 6
+       RuleAction: allow
+       CidrBlock: !Ref DashboardCidrBlockZoneB
        PortRange:
          From: 1024
          To: 65535
@@ -342,7 +371,7 @@ Resources:
       DBSubnetGroupName: !Ref RDSSubnetGroup
       DBParameterGroupName: !Ref RDSDBParameterGroup
       DBInstanceIdentifier: !Ref DBName
-      AvailabilityZone: !Ref AvailabilityZoneA
+      MultiAZ: true
       Port: 3306
     DeletionPolicy: Snapshot
 
@@ -467,9 +496,7 @@ Resources:
       ManagedPolicyArns:
         # The managed IAM policy AmazonSSMManagedInstanceCore grants access to Session Manager
         #- !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
-
-
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
 
   SecurityGroupVpcEndpoint:
     Type: AWS::EC2::SecurityGroup
@@ -513,6 +540,7 @@ Resources:
       VpcId: !Ref VPC
       SubnetIds:
         - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
       SecurityGroupIds:
         - !Ref SecurityGroupVpcEndpoint
       VpcEndpointType: Interface
@@ -525,6 +553,7 @@ Resources:
       VpcId: !Ref VPC
       SubnetIds:
         - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
       SecurityGroupIds:
         - !Ref SecurityGroupVpcEndpoint
       VpcEndpointType: Interface
@@ -537,6 +566,7 @@ Resources:
       VpcId: !Ref VPC
       SubnetIds:
         - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
       SecurityGroupIds:
         - !Ref SecurityGroupVpcEndpoint
       VpcEndpointType: Interface
@@ -548,22 +578,30 @@ Outputs:
     Value: !Ref VPC
     Export:
       Name: VPC-ID
+      
   S3Bucket:
     Description: The S3Bucket for lambda zip
     Value: !Ref S3Bucket
     Export:
       Name: S3BucketLambda
+      
   VPCCidrBlock:
     Description: The VPC ID
     Value: !GetAtt VPC.CidrBlock
     Export:
       Name: VPC-CidrBlock
 
-  DashboardSubnet:
+  DashboardSubnetA:
     Description: The private subnet of the dashboard
     Value: !Ref PrivateSubnetA
     Export:
-      Name: DashboardSubnet
+      Name: DashboardSubnetA
+
+  DashboardSubnetB:
+    Description: The private subnet of the dashboard
+    Value: !Ref PrivateSubnetB
+    Export:
+      Name: DashboardSubnetB
 
   PanintelligenceTargetGroup:
     Description: Panintelligence Target group for load balancer
