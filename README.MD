@@ -23,7 +23,7 @@ cd aws-deployment
 VPCCIDRBLOCK=10.0.0.0/16
 PUBLICZONEACIDRBLOCK=10.0.1.0/24
 PUBLICZONEBCIDRBLOCK=10.0.2.0/24
-DASHBOARDCIDRBLOCK=10.0.0.0/24
+DASHBOARDCIDRBLOCKA=10.0.0.0/24
 DASHBOARDCIDRBLOCKB=10.0.5.0/24
 AVAILABILITYZONEA=eu-west-1a
 AVAILABILITYZONEB=eu-west-1b
@@ -68,7 +68,7 @@ This script will build the deployment package for the side load lambda function
 
 The first script builds VPC, database and everything required for your AWS Panintelligence instance.
 ``` bash
-aws cloudformation create-stack --stack-name PanintelligenceOne --template-body file://infrastructure_setup_one.yml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DashboardCidrBlockZoneA,ParameterValue=$DASHBOARDCIDRBLOCK ParamterKey=DashboardCidrBlockZoneB, ParameterValue=$DashboardCidrBlockZoneB ParameterKey=AvailabilityZoneA,ParameterValue=$AVAILABILITYZONEA ParameterKey=AvailabilityZoneB,ParameterValue=$AVAILABILITYZONEB ParameterKey=RDSUsername,ParameterValue=$RDSUSERNAME ParameterKey=RDSPassword,ParameterValue=$RDSPASSWORD ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPrivateA,ParameterValue=$RDSPRIVATEA ParameterKey=RDSPrivateB,ParameterValue=$RDSPRIVATEB ParameterKey=ACMCertArn,ParameterValue=$ACMCERTARN ParameterKey=S3BucketName,ParameterValue=$S3BUCKETNAME --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name PanintelligenceOne --template-body file://infrastructure_setup_one.yml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DashboardCidrBlockZoneA,ParameterValue=$DASHBOARDCIDRBLOCKA ParamterKey=DashboardCidrBlockZoneB, ParameterValue=$DASHBOARDCIDRBLOCKB ParameterKey=AvailabilityZoneA,ParameterValue=$AVAILABILITYZONEA ParameterKey=AvailabilityZoneB,ParameterValue=$AVAILABILITYZONEB ParameterKey=RDSUsername,ParameterValue=$RDSUSERNAME ParameterKey=RDSPassword,ParameterValue=$RDSPASSWORD ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPrivateA,ParameterValue=$RDSPRIVATEA ParameterKey=RDSPrivateB,ParameterValue=$RDSPRIVATEB ParameterKey=ACMCertArn,ParameterValue=$ACMCERTARN ParameterKey=S3BucketName,ParameterValue=$S3BUCKETNAME --capabilities CAPABILITY_NAMED_IAM
 ./check_stack.sh PanintelligenceOne
 ```
 
