@@ -146,3 +146,4 @@ Resources:
         Value:
           Ref: PanintelligenceAutoscalingGroup
       ComparisonOperator: LessThanThreshold
+      MetricName: CPUUtilization
