@@ -50,6 +50,9 @@ Parameters:
       Name for tagging the EFS FileSystem (Default -
       CloudFormationStackNameFileSystem)
     Default: ' '
+  ACMCertArn:Looking
+    Type: String
+    Description: Please obtain your ACM ARN that you wish to use on the load balancer for https
 Resources:
   NestedNetworkCall:
     Type: 'AWS::CloudFormation::Stack'
@@ -62,6 +65,7 @@ Resources:
         DashboardCidrBlockZoneB: !Ref DashboardCidrBlockZoneB
         RDSPrivateA: !Ref RDSPrivateA
         RDSPrivateB: !Ref RDSPrivateB
+        ACMCertArn: !Ref ACMCertArn
       TemplateURL: !Sub 'https://${AWS::AccountId}-panintelligence-configuration.s3.${AWS::Region}.amazonaws.com/network_stack.yml'
       TimeoutInMinutes: 60
 
@@ -88,9 +92,6 @@ Resources:
   NestedIAMCall:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      Parameters:
-        Encryption: !Ref Encryption
-        FileSystemName: !Ref FileSystemName
       TemplateURL: !Sub 'https://${AWS::AccountId}-panintelligence-configuration.s3.${AWS::Region}.amazonaws.com/iam_roles.yml'
       TimeoutInMinutes: 60
     DependsOn: NestedEFSCall
@@ -98,9 +99,6 @@ Resources:
   NestedLambdaCall:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
-      Parameters:
-        Encryption: !Ref Encryption
-        FileSystemName: !Ref FileSystemName
       TemplateURL: !Sub 'https://${AWS::AccountId}-panintelligence-configuration.s3.${AWS::Region}.amazonaws.com/lambda_stack.yml'
       TimeoutInMinutes: 60
     DependsOn: NestedIAMCall

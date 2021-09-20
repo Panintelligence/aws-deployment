@@ -27,13 +27,11 @@ DASHBOARDCIDRBLOCKA=10.0.0.0/24
 DASHBOARDCIDRBLOCKB=10.0.5.0/24
 AVAILABILITYZONEA=eu-west-1a
 AVAILABILITYZONEB=eu-west-1b
-RDSUSERNAME=dashboard
-RDSPASSWORD=5up3r53cur3P455w0rd!
+RDSUSERNAME= ** your database username **
 DBNAME=dashboard
 RDSPRIVATEA=10.0.3.0/24
 RDSPRIVATEB=10.0.4.0/24
 ACMCERTARN= ** your ACM ARN **
-S3BUCKETNAME= ** This bucket will be where the lambda deployment scripts are based**
 ENCRYPTION=true
 FILESYSTEMNAME= ** EFS volume name **
 AMIID= ** Enter Panintelligence Marketplace AMI here **
@@ -76,12 +74,13 @@ We're going to copy lambda zip and the nested stacks to call
 
 ```bash
 aws s3 cp dist/lambda.zip s3://${ACCOUNT_ID}-panintelligence-configuration
+aws s3 cp dist/nested-stacks s3://${ACCOUNT_ID}-panintelligence-configuration --recursive
 ```
 
 The next script is going to create our side load lambda function which is to help you move themes and images to customise your AWS Panintelligence system.
 
 ```bash
-aws cloudformation create-stack --stack-name PanintelligenceTwo --template-body file://infrastructure_setup_two.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name PanintelligenceNestedStack --template-body file://panintelligence_nested_stack.yml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DashboardCidrBlockZoneA,ParameterValue=$DASHBOARDCIDRBLOCKA ParameterKey=DashboardCidrBlockZoneB,ParameterValue=$DASHBOARDCIDRBLOCKB ParameterKey=DBUserName,ParameterValue=$RDSUSERNAME ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPrivateA,ParameterValue=$RDSPRIVATEA ParameterKey=RDSPrivateB,ParameterValue=$RDSPRIVATEB ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
 ./check_stack.sh PanintelligenceTwo
 ```
 
