@@ -1,0 +1,616 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  VPCCidrBlock:
+    Type: String
+    Default: 10.0.0.0/16
+    Description: The cider block for the VPC
+  PublicZoneACidrBlock:
+    Type: String
+    Default: 10.0.2.0/24
+    Description: The public cider block for availbility zone A that will be attached to ALB
+  PublicZoneBCidrBlock:
+    Type: String
+    Default: 10.0.3.0/24
+    Description: The public cider block for availbility zone B that will be attached to ALB
+  DashboardCidrBlockZoneA:
+    Type: String
+    Default: 10.0.0.0/24
+    Description: The cider block for private access within the VPC that the EC2 instance will use
+  DashboardCidrBlockZoneB:
+    Type: String
+    Default: 10.0.1.0/24
+    Description: The cider block for private access within the VPC that the EC2 instance will use
+  RDSPrivateA:
+    Type: String
+    Default: 10.0.4.0/24
+    Description: The subnet for RDS availibility a
+  RDSPrivateB:
+    Type: String
+    Default: 10.0.5.0/24
+    Description: The subnet for RDS availibility b
+  ACMCertArn:
+    Type: String
+    Description: Please obtain your ACM ARN that you wish to use on the load balancer for https
+
+
+Resources:
+# Create a VPC for isolated network environment
+  VPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock:
+        Ref: VPCCidrBlock
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub 'Panintelligence-${AWS::StackName}'
+# Create the internet gateway and attach it to the VPC
+  InternetGateway:
+    Type: 'AWS::EC2::InternetGateway'
+    DependsOn: VPC
+
+  AttachGateway:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+# Create the subnets for RDS, ALB and Panintelligence Dashboard
+
+  PublicSubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        Ref: PublicZoneACidrBlock
+      AvailabilityZone: !Sub '${AWS::Region}a'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Public-Subnet-Zone-A'
+
+  PublicSubnetB:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        Ref: PublicZoneBCidrBlock
+      AvailabilityZone: !Sub '${AWS::Region}b'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Public-B-Subnet-Zone-B'
+
+  PrivateSubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        Ref: DashboardCidrBlockZoneA
+      AvailabilityZone: !Sub '${AWS::Region}a'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Private-A'
+
+  PrivateSubnetB:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        Ref: DashboardCidrBlockZoneB
+      AvailabilityZone: !Sub '${AWS::Region}b'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Private-B'
+
+  RDSPrivateACidr:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        Ref: RDSPrivateA
+      AvailabilityZone: !Sub '${AWS::Region}a'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-rds-private-a'
+
+  RDSPrivateBCidr:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        Ref: RDSPrivateB
+      AvailabilityZone: !Sub '${AWS::Region}b'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-rds-private-b'
+
+  # Create the route tables
+  PublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Route-table'
+
+  PrivateRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Private-Route-table'
+
+  # Associate subnets to route tables
+  RDSSubnetARouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref RDSPrivateACidr
+      RouteTableId: !Ref PrivateRouteTable
+
+  RDSSubnetBRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref RDSPrivateBCidr
+      RouteTableId: !Ref PrivateRouteTable
+
+  PublicSubnetARouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PublicSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetBRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PublicSubnetB
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateASubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetA
+      RouteTableId: !Ref PrivateRouteTable
+
+  PrivateBSubnetRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PrivateSubnetB
+      RouteTableId: !Ref PrivateRouteTable
+
+# Routes for route table
+  PublicRoute1:
+    Type: 'AWS::EC2::Route'
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+
+  # Create NACL
+  PanintelligencePublic:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+       VpcId: !Ref VPC
+       Tags:
+       - Key: Name
+         Value: !Sub '${AWS::StackName}-NACL'
+
+  InboundRuleHTTP:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+       NetworkAclId: !Ref PanintelligencePublic
+       RuleNumber: 100
+       Protocol: 6
+       RuleAction: allow
+       CidrBlock: 0.0.0.0/0
+       PortRange:
+         From: 80
+         To: 80
+
+  InboundRuleHTTPS:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+       NetworkAclId: !Ref PanintelligencePublic
+       RuleNumber: 200
+       Protocol: 6
+       RuleAction: allow
+       CidrBlock: 0.0.0.0/0
+       PortRange:
+         From: 443
+         To: 443
+
+  InboundRuleCustom:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+       NetworkAclId: !Ref PanintelligencePublic
+       RuleNumber: 300
+       Protocol: 6
+       RuleAction: allow
+       CidrBlock: !Ref PublicZoneACidrBlock
+       PortRange:
+         From: 8224
+         To: 8224
+
+  InboundRuleCustom:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+       NetworkAclId: !Ref PanintelligencePublic
+       RuleNumber: 400
+       Protocol: 6
+       RuleAction: allow
+       CidrBlock: !Ref PublicZoneBCidrBlock
+       PortRange:
+         From: 8224
+         To: 8224
+
+  OutboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+       NetworkAclId: !Ref PanintelligencePublic
+       RuleNumber: 100
+       Protocol: 6
+       Egress: true
+       RuleAction: allow
+       CidrBlock: !Ref PublicZoneACidrBlock
+       PortRange:
+         From: 1024
+         To: 65535
+
+  OutboundRule:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+       NetworkAclId: !Ref PanintelligencePublic
+       RuleNumber: 200
+       Protocol: 6
+       Egress: true
+       RuleAction: allow
+       CidrBlock: !Ref PublicZoneBCidrBlock
+       PortRange:
+         From: 1024
+         To: 65535
+
+# Security groups
+  ALBSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: security group for ALB
+      GroupName: !Sub '${AWS::StackName}-load-balancer'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Security-ALB'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: 80
+          IpProtocol: tcp
+          ToPort: 80
+        - CidrIp: 0.0.0.0/0
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+
+  PrivateSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Security-private'
+      VpcId: !Ref VPC
+      GroupDescription: security group for attaching to  ALB
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8224
+          ToPort: 8224
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+
+  RDSSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: security group for RDS
+      GroupName: !Sub '${AWS::StackName}-RDS-access'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-RDS-access'
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - CidrIp: !Ref PublicZoneACidrBlock
+          FromPort: 3306
+          IpProtocol: tcp
+          ToPort: 3306
+        - CidrIp: !Ref PublicZoneBCidrBlock
+          FromPort: 3306
+          IpProtocol: tcp
+          ToPort: 3306
+
+
+  SecurityGroupVpcEndpoint:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for VPC Endpoints
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        # The SSM Agent connects to Session Manager over TCP 443
+        - Description: allow inbound HTTPS from the EC2 instance
+          SourceSecurityGroupId: !Ref SecurityGroupEc2Instance
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+      SecurityGroupEgress:
+        # The SSM Agent connects to Session Manager over TCP 443
+        - Description: allow outbound HTTPS to the VPC
+          CidrIp: !Ref VPCCidrBlock
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+
+  SecurityGroupEc2Instance:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for EC2 Instance
+      VpcId: !Ref VPC
+      # Despite this security group containing no ingress rules, Session
+      # Manager can still provide shell access
+      SecurityGroupEgress:
+        # The SSM Agent connects to Session Manager over TCP 443
+        - Description: allow outbound HTTPS to the VPC
+          CidrIp: !Ref VPCCidrBlock
+          FromPort: 443
+          ToPort: 443
+          IpProtocol: tcp
+
+  EFSMountTarget:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: Security group for mount target
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '2049'
+          ToPort: '2049'
+          CidrIp: !Ref VPCCidrBlock
+# Endpoints
+  SsmVpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ssm
+      VpcId: !Ref VPC
+      SubnetIds:
+        - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
+      SecurityGroupIds:
+        - !Ref SecurityGroupVpcEndpoint
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+
+  SsmMessagesVpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ssmmessages
+      VpcId: !Ref VPC
+      SubnetIds:
+        - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
+      SecurityGroupIds:
+        - !Ref SecurityGroupVpcEndpoint
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+
+  Ec2MessagesVpcEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ec2messages
+      VpcId: !Ref VPC
+      SubnetIds:
+        - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
+      SecurityGroupIds:
+        - !Ref SecurityGroupVpcEndpoint
+      VpcEndpointType: Interface
+      PrivateDnsEnabled: True
+
+  S3Endpoint:
+    Type: 'AWS::EC2::VPCEndpoint'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal: '*'
+            Action:
+              - 's3:*'
+            Resource:
+              - !Sub
+                - 'arn:aws:s3:::${BucketName}/*'
+                - BucketName : !ImportValue 'S3BucketArn'
+              - !ImportValue S3BucketArn
+              - 'arn:aws:s3:::624901044796-panintelligence-resources/*'
+              - 'arn:aws:s3:::624901044796-panintelligence-resources'
+      RouteTableIds:
+        - !Ref PrivateRouteTable
+      ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
+      VpcId: !Ref VPC
+
+  SecretsManagerVPCEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      SubnetIds:
+        - !Ref PrivateSubnetA
+        - !Ref PrivateSubnetB
+      SecurityGroupIds:
+        -  !Ref SecurityGroupEc2Instance
+      VpcEndpointType: Interface
+      ServiceName:
+        Fn::Sub: com.amazonaws.${AWS::Region}.secretsmanager
+      PrivateDnsEnabled: true
+      VpcId: !Ref VPC
+
+  # ALB and Target group
+  # Create Application Load balancer
+  ApplicationLoadBalancer:
+        Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+        Properties:
+            Name: "Panintelligence"
+            Scheme: "internet-facing"
+            Type: "application"
+            Subnets:
+              - !Ref PublicSubnetA
+              - !Ref PublicSubnetB
+            SecurityGroups:
+              - !Ref ALBSecurityGroup
+            IpAddressType: "ipv4"
+            LoadBalancerAttributes:
+              -
+                Key: "access_logs.s3.enabled"
+                Value: "false"
+              -
+                Key: "idle_timeout.timeout_seconds"
+                Value: "2000"
+              -
+                Key: "deletion_protection.enabled"
+                Value: "false"
+              -
+                Key: "routing.http2.enabled"
+                Value: "true"
+              -
+                Key: "routing.http.drop_invalid_header_fields.enabled"
+                Value: "false"
+
+  HTTPSListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 443
+      Protocol: "HTTPS"
+      SslPolicy: "ELBSecurityPolicy-2016-08"
+      Certificates:
+        -
+          CertificateArn: !Ref ACMCertArn
+      DefaultActions:
+        -
+          Order: 1
+          TargetGroupArn: !Ref TargetGroup
+          Type: "forward"
+
+  HTTPListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: "HTTP"
+      DefaultActions:
+        -
+          Order: 1
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Port: "443"
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "#{query}"
+            StatusCode: "HTTP_301"
+          Type: "redirect"
+
+  TargetGroup:
+    Type: "AWS::ElasticLoadBalancingV2::TargetGroup"
+    Properties:
+      HealthCheckIntervalSeconds: 65
+      HealthCheckPath: "/"
+      Port: 8224
+      Protocol: "HTTP"
+      HealthCheckPort: "traffic-port"
+      HealthCheckProtocol: "HTTP"
+      HealthCheckTimeoutSeconds: 60
+      UnhealthyThresholdCount: 4
+      TargetType: "instance"
+      Matcher:
+        HttpCode: "200,302"
+      HealthyThresholdCount: 4
+      VpcId: !Ref VPC
+      Name: "panintelligence"
+      HealthCheckEnabled: true
+      TargetGroupAttributes:
+        -
+          Key: "stickiness.enabled"
+          Value: "true"
+        -
+          Key: "deregistration_delay.timeout_seconds"
+          Value: "300"
+        -
+          Key: "stickiness.type"
+          Value: "lb_cookie"
+        -
+          Key: "stickiness.lb_cookie.duration_seconds"
+          Value: "86400"
+        -
+          Key: "slow_start.duration_seconds"
+          Value: "0"
+        -
+          Key: "load_balancing.algorithm.type"
+          Value: "round_robin"
+Outputs:
+  VPCCidrBlock:
+    Description: The VPC ID
+    Value: !GetAtt VPC.CidrBlock
+    Export:
+      Name: VPC-CidrBlock
+
+  RDSSubnetA:
+    Description: The Cidr block A of the RDS
+    Value: !Ref RDSPrivateACidr
+    Export:
+      Name: RDSSubnetA
+
+  RDSSubnetB:
+    Description: The Cidr block B of the RDS
+    Value: !Ref RDSPrivateBCidr
+    Export:
+      Name: RDSSubnetB
+
+  PublicSubnetA:
+    Description: The Cidr block A of the public
+    Value: !Ref PublicSubnetA
+    Export:
+      Name: PublicSubnetA
+
+  PublicSubnetB:
+    Description: The Cidr block B of the public
+    Value: !Ref PublicSubnetB
+    Export:
+      Name: PublicSubnetB
+
+  PrivateSubnetA:
+    Description: The Cidr block A of the private dashboard
+    Value: !Ref PrivateSubnetA
+    Export:
+      Name: PrivateSubnetA
+
+  PrivateSubnetB:
+    Description: The Cidr block B of the private dashboard
+    Value: !Ref PrivateSubnetB
+    Export:
+      Name: PrivateSubnetB
+
+  EFSMountTarget:
+    Description: the efs mount target
+    Value: !Ref EFSMountTarget
+    Export:
+      Name: EFSMountTarget
+
+  PanintelligenceTargetGroup:
+    Description: Panintelligence Target group for load balancer
+    Value: !Ref TargetGroup
+    Export:
+      Name: TargetGroup
+
+  PrivateSecurityGroup:
+    Description: Panintelligence PrivateSecurityGroup
+    Value: !Ref PrivateSecurityGroup
+    Export:
+      Name: PrivateSecurityGroup
+
+  SecurityGroupEc2Instance:
+    Description: Panintelligence SecurityGroupEc2Instance
+    Value: !Ref SecurityGroupEc2Instance
+    Export:
+      Name: SecurityGroupEc2Instance

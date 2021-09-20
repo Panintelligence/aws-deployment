@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  S3BucketResource:
+    Type: 'AWS::S3::Bucket'
+    DependsOn: S3InvokeLambdaPermission
+    Properties:
+      BucketName: !Sub '${AWS::AccountId}-panintelligence-resources'
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: 's3:ObjectCreated:*'
+            Function: !GetAtt S3ToEFSLambda.Arn
+
+  S3ToEFSLambda:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      Environment:
+        Variables:
+          allowed_types: 'images,themes,excel-data'
+          file_group: pi-user
+          file_owner: pi-user
+      FileSystemConfigs:
+        - Arn: !ImportValue AccessPointResourceArn
+          LocalMountPath: /mnt/efs
+      Handler: lambda_handler.lambda_handler
+      Role: !ImportValue LambdaRoleArn
+      Code:
+        S3Bucket: !ImportValue S3BucketLambda
+        S3Key: lambda.zip
+      Runtime: python3.8
+      Timeout: 15
+      TracingConfig:
+        Mode: Active
+      VpcConfig:
+        SecurityGroupIds:
+          - !ImportValue EFSMountTarget
+        SubnetIds:
+          - 'Fn::ImportValue': PrivateSubnetA
+          - 'Fn::ImportValue': PrivateSubnetB
+
+  S3InvokeLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt S3ToEFSLambda.Arn
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub "arn:aws:s3:::${AWS::AccountId}-panintelligence-resources"

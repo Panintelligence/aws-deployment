@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  LambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: lambdarole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+        Version: 2012-10-17
+      Path: /
+
+  ListBucketPolicies:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: panintelligence-list-bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'ec2:DescribeNetworkInterfaces'
+              - 'ec2:CreateNetworkInterface'
+              - 'ec2:DeleteNetworkInterface'
+              - 'ec2:DescribeInstances'
+              - 'ec2:AttachNetworkInterface'
+            Resource: '*'
+      Roles:
+        - !Ref LambdaRole
+
+  EFSPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: panintelligence-write-bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'elasticfilesystem:*'
+            Resource:
+              - !ImportValue FileSystemArn
+      Roles:
+        - !Ref LambdaRole
+
+  LambdaExecute:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: panintelligence-lambda-execute
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+            Resource: 'arn:aws:logs:*'
+          - Effect: Allow
+            Action:
+              - 's3:*'
+            Resource:
+              - !Sub
+                - '${BucketName}/*'
+                - BucketName : !Sub 'arn:aws:s3:::${AWS::AccountId}-panintelligence-resources'
+              - !Sub 'arn:aws:s3:::${AWS::AccountId}-panintelligence-resources'
+          - Effect: Allow
+            Action:
+              - 's3:GetObject'
+            Resource:
+              - !Sub
+                - '${BucketName}/*'
+                - BucketName : !ImportValue S3BucketArn
+              - !ImportValue S3BucketArn
+      Roles:
+        - !Ref LambdaRole
+
+
+Outputs:
+  LambdaRole:
+    Value: !Ref LambdaRole
+    Description: The lambda role for efs
+    Export:
+      Name: LambdaRoleRef
+
+  LambdaRoleArn:
+    Value: !GetAtt LambdaRole.Arn
+    Description: The lambda role for efs
+    Export:
+      Name: LambdaRoleArn

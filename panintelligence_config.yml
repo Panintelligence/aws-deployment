@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub '${AWS::AccountId}-panintelligence-configuration'
+Outputs:
+  S3BucketName:
+    Value: !Ref S3Bucket
+    Description: The bucket which will hold the nested stacks
+    Export:
+      Name: S3BucketLambda
+  S3BucketArn:
+    Value: !GetAtt S3Bucket.Arn
+    Description: The bucket arn which will hold the nested stacks
+    Export:
+      Name: S3BucketArn

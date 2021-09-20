@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  VPCCidrBlock:
+    Type: String
+    Default: 10.0.0.0/16
+    Description: The cider block for the VPC
+  PublicZoneACidrBlock:
+    Type: String
+    Default: 10.0.2.0/24
+    Description: The public cider block for availbility zone A that will be attached to ALB
+  PublicZoneBCidrBlock:
+    Type: String
+    Default: 10.0.3.0/24
+    Description: The public cider block for availbility zone B that will be attached to ALB
+  DashboardCidrBlockZoneA:
+    Type: String
+    Default: 10.0.0.0/24
+    Description: The cider block for private access within the VPC that the EC2 instance will use
+  DashboardCidrBlockZoneB:
+    Type: String
+    Default: 10.0.1.0/24
+    Description: The cider block for private access within the VPC that the EC2 instance will use
+  RDSPrivateA:
+    Type: String
+    Default: 10.0.4.0/24
+    Description: The subnet for RDS availibility a
+  RDSPrivateB:
+    Type: String
+    Default: 10.0.5.0/24
+    Description: The subnet for RDS availibility b
+  DBUserName:
+    Type: String
+    Description: The database master admin username
+  DBName:
+    Type: String
+    Default: dashboard
+    Description: The database schema name
+  Encryption:
+    Type: String
+    Description: Enable Encryption for the FileSystem?  (Default - true)
+    ConstraintDescription: Must be a boolean value (true / false)
+    AllowedValues:
+      - true
+      - false
+    Default: true
+  FileSystemName:
+    Type: String
+    Description: >-
+      Name for tagging the EFS FileSystem (Default -
+      CloudFormationStackNameFileSystem)
+    Default: ' '
+Resources:
+  NestedNetworkCall:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        VPCCidrBlock: !Ref VPCCidrBlock
+        PublicZoneACidrBlock: !Ref PublicZoneACidrBlock
+        PublicZoneBCidrBlock: !Ref PublicZoneBCidrBlock
+        DashboardCidrBlockZoneA: !Ref DashboardCidrBlockZoneA
+        DashboardCidrBlockZoneB: !Ref DashboardCidrBlockZoneB
+        RDSPrivateA: !Ref RDSPrivateA
+        RDSPrivateB: !Ref RDSPrivateB
+      TemplateURL: !Sub 'https://${AWS::AccountId}-panintelligence-configuration.s3.${AWS::Region}.amazonaws.com/network_stack.yml'
+      TimeoutInMinutes: 60
+
+  NestedRDSCall:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        DBUserName: !Ref DBUserName
+        DBName: !Ref DBName
+      TemplateURL: !Sub 'https://${AWS::AccountId}-panintelligence-configuration.s3.${AWS::Region}.amazonaws.com/rds_stack.yml'
+      TimeoutInMinutes: 60
+    DependsOn: NestedNetworkCall
+
+  NestedEFSCall:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Encryption: !Ref Encryption
+        FileSystemName: !Ref FileSystemName
+      TemplateURL: !Sub 'https://${AWS::AccountId}-panintelligence-configuration.s3.${AWS::Region}.amazonaws.com/efs_stack.yml'
+      TimeoutInMinutes: 60
+    DependsOn: NestedNetworkCall
+
+  NestedIAMCall:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Encryption: !Ref Encryption
+        FileSystemName: !Ref FileSystemName
+      TemplateURL: !Sub 'https://${AWS::AccountId}-panintelligence-configuration.s3.${AWS::Region}.amazonaws.com/iam_roles.yml'
+      TimeoutInMinutes: 60
+    DependsOn: NestedEFSCall
+
+  NestedLambdaCall:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        Encryption: !Ref Encryption
+        FileSystemName: !Ref FileSystemName
+      TemplateURL: !Sub 'https://${AWS::AccountId}-panintelligence-configuration.s3.${AWS::Region}.amazonaws.com/lambda_stack.yml'
+      TimeoutInMinutes: 60
+    DependsOn: NestedIAMCall
+
+Outputs:
+  VPCCidrBlock:
+    Value: !GetAtt NestedNetworkCall.Outputs.VPCCidrBlock
+  RDSSubnetA:
+    Value: !GetAtt NestedNetworkCall.Outputs.RDSSubnetA
+  RDSSubnetB:
+    Value: !GetAtt NestedNetworkCall.Outputs.RDSSubnetB

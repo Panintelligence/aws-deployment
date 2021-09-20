@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  RDSDBParameterGroup:
+    Type: 'AWS::RDS::DBParameterGroup'
+    Properties:
+      Parameters:
+        sql_mode: NO_AUTO_VALUE_ON_ZERO
+        lower_case_table_names: 1
+        log_bin_trust_function_creators: 1
+      Description: Parameter group for panintelligence rds
+      Family: mariadb10.4
+  MyRotationServerlessApp:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      TemplateURL: >-
+        https://awsserverlessrepo-changesets-18ssd5swmy82n.s3.eu-west-1.amazonaws.com/624901044796/arn%3Aaws%3Aserverlessrepo%3Aus-east-1%3A297356227824%3Aapplications-SecretsManagerRDSMySQLRotationMultiUser-versions-1.1.0/5d05739f-4017-4824-8458-d7b1210823b2.yaml?X-Amz-Security-Token=IQoJb3JpZ2luX2VjEA0aCWV1LXdlc3QtMSJGMEQCIB1t9IowCnbF4%2FSSvlwgTLLkjQC5lsz4U4UnXHZ6pEyKAiApbGVsGqMkzSSh8GiLIhtHyRR1p1Z4fuUc3JKj6KfmwyquAghmEAIaDDA1NDMzNzE1ODkwOSIMFMgIWkIOU%2FmlVbYfKosCXhR0VeQ6Nt1mKrbZ6t0sjk5G%2FusL9HU9OUDDnMlQHhz%2BqEfkNyTds9HlaHy3RuRz8KrPaMvZK9XEBbqqYMydR80KHwrBGQXo94FOgk%2FyjvWzOK95kqFiVMyYJIjJhAdgumEg3Bpd%2B6Um11rtbeJIk6M5RALo5sfV%2BmdSSWD%2BotAluHenq7%2F3%2B0MCFdJ39DEWcsCN2aQ2%2BxGqdq5ccLzU%2FuWBgX22ZM5AgvycAVGiLcU8KnrrhRag9WFIeM3g%2FESWYUkU6wnNF1ObFZOVNIMqe%2BUWw%2B6QU5PcSVPIqMBXwz%2FmdZS9VAypfn8T9y8HUF%2BzXELLcH7YfpgpLgW%2BzkW0VqzuVLTuxJ0frd%2FUMK29iYoGOpsBEyDSj5kQPwl9W44iMYObCuRW8nB5J3osW2V70GTABiWNaOb5cvHRjqSeZDlRQW8AGXFCPoZ%2BR5QpHItF%2F75acDyaDBgu3Nc7hS0aUfNdLnVKpsgGWf67THzpoKIHbibotQemKLDXsr0rmbBsI5rD6tqmkTZX%2BefXDwI60%2BSfyp%2F41WTLRTd5THWbszoy14aT2e6WkxfcpVPR0e0%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20210915T211102Z&X-Amz-SignedHeaders=host&X-Amz-Expires=21599&X-Amz-Credential=ASIAQZJV7H36QDTVKPPC%2F20210915%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Signature=0625574465e033dd9a771c5be6ea3aa681a2c2bf14fd612c1e9411a4d21e8bfb
+      Parameters:
+        endpoint: !Sub 'https://secretsmanager.${AWS::Region}.amazonaws.com'
+        functionName: SecretsManagerMySQLRotationFunction
+      Tags:
+        - Value: SAM
+          Key: 'lambda:createdBy'
+        - Value: >-
+            arn:aws:serverlessrepo:us-east-1:297356227824:applications/SecretsManagerRDSMySQLRotationMultiUser
+          Key: 'serverlessrepo:applicationId'
+        - Value: 1.1.0
+          Key: 'serverlessrepo:semanticVersion'
+  MyRDSInstance:
+    DeletionPolicy: Snapshot
+    Type: 'AWS::RDS::DBInstance'
+    Properties:
+      Engine: mariadb
+      DBParameterGroupName: !Ref RDSDBParameterGroup
+      PubliclyAccessible: true
+      MultiAZ: true
+      MasterUsername: !Join
+        - ''
+        - - '{{resolve:secretsmanager:'
+          - !Ref MyRDSSecret
+          - ':SecretString:username}}'
+      MasterUserPassword: !Join
+        - ''
+        - - '{{resolve:secretsmanager:'
+          - !Ref MyRDSSecret
+          - ':SecretString:password}}'
+      Port: 3306
+      AllocatedStorage: '20'
+      DBInstanceClass: db.t2.micro
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      DBInstanceIdentifier: !Ref DBName
+  RDSSubnetGroup:
+    Type: 'AWS::RDS::DBSubnetGroup'
+    Properties:
+      DBSubnetGroupName: Panintelligence
+      DBSubnetGroupDescription: panintelligence subnet group
+      SubnetIds:
+        - !ImportValue RDSSubnetA
+        - !ImportValue RDSSubnetB
+      Tags:
+        - Value: !Sub '${AWS::StackName}-Subnet-group'
+          Key: Name
+  MySecretRotationSchedule:
+    Type: 'AWS::SecretsManager::RotationSchedule'
+    Properties:
+      SecretId: !Ref MyRDSSecret
+      RotationLambdaARN: !Sub >-
+        arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:SecretsManagerMySQLRotationFunction
+      RotationRules:
+        AutomaticallyAfterDays: 30
+    DependsOn: SecretRDSInstanceAttachment
+  MyRDSSecret:
+    Type: 'AWS::SecretsManager::Secret'
+    Properties:
+      GenerateSecretString:
+        ExcludePunctuation: true
+        GenerateStringKey: password
+        RequireEachIncludedType: true
+        PasswordLength: 25
+        SecretStringTemplate: '{"username": "MyDBAdmin"}'
+      Name: ProdDBSecret
+      Description: Secret with dynamically generated password.
+  SecretRDSInstanceAttachment:
+    Type: 'AWS::SecretsManager::SecretTargetAttachment'
+    Properties:
+      TargetType: 'AWS::RDS::DBInstance'
+      SecretId: !Ref MyRDSSecret
+      TargetId: !Ref MyRDSInstance
+Parameters:
+  DBUserName:
+    Type: String
+    Description: The database master admin username
+  DBName:
+    Default: dashboard
+    Type: String
+    Description: The database schema name
+Outputs:
+  DBName:
+    Value: !Ref MyRDSSecret
+    Description: The database schema name
+    Export:
+      Name: MyRDSSecret
+
+  MyDBEndpoint:
+    Description: Panintelligence MyDB Endpoint
+    Value: !GetAtt MyRDSInstance.Endpoint.Address
+    Export:
+      Name: MyDBEndPoint

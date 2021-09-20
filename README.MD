@@ -66,16 +66,16 @@ This script will build the deployment package for the side load lambda function
 ./build_lambda.sh
 ```
 
-The first script builds VPC, database and everything required for your AWS Panintelligence instance.
+The first script builds a AWS S3 bucket to upload nested stacks and resources.
 ``` bash
-aws cloudformation create-stack --stack-name PanintelligenceOne --template-body file://infrastructure_setup_one.yml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DashboardCidrBlockZoneA,ParameterValue=$DASHBOARDCIDRBLOCKA ParameterKey=DashboardCidrBlockZoneB,ParameterValue=$DASHBOARDCIDRBLOCKB ParameterKey=AvailabilityZoneA,ParameterValue=$AVAILABILITYZONEA ParameterKey=AvailabilityZoneB,ParameterValue=$AVAILABILITYZONEB ParameterKey=RDSUsername,ParameterValue=$RDSUSERNAME ParameterKey=RDSPassword,ParameterValue=$RDSPASSWORD ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPrivateA,ParameterValue=$RDSPRIVATEA ParameterKey=RDSPrivateB,ParameterValue=$RDSPRIVATEB ParameterKey=ACMCertArn,ParameterValue=$ACMCERTARN ParameterKey=S3BucketName,ParameterValue=$S3BUCKETNAME --capabilities CAPABILITY_NAMED_IAM
-./check_stack.sh PanintelligenceOne
+aws cloudformation create-stack --stack-name PanintelligenceConfig --template-body file://panintelligence_config.yml
+./check_stack.sh PanintelligenceConfig
 ```
 
-We're now going to copy the lambda code to AWS, ready for deployment.
+We're going to copy lambda zip and the nested stacks to call
 
 ```bash
-aws s3 cp dist/lambda.zip s3://${S3BUCKETNAME}
+aws s3 cp dist/lambda.zip s3://${ACCOUNT_ID}-panintelligence-configuration
 ```
 
 The next script is going to create our side load lambda function which is to help you move themes and images to customise your AWS Panintelligence system.
@@ -88,7 +88,7 @@ aws cloudformation create-stack --stack-name PanintelligenceTwo --template-body 
 Now we're going to update the stack because of a circular dependency on the s3 bucket and lambda dependency (both need to be created before we can attach the trigger to the s3 bucket.)
 
 ```bash
-aws cloudformation update-stack --stack-name PanintelligenceTwo --template-body file://infrastructure_setup_two_updated.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation update-stack --stack-name PanintelligenceTwo --template-body file://panintelligence_nested_stack.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM
 ./check_stack_update.sh PanintelligenceTwo
 ```
 

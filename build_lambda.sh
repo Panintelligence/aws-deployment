@@ -23,4 +23,6 @@ cd "${CURRENT_DIR}/build"
 
 zip -r "lambda.zip" .
 
+cp -r "${CURRENT_DIR}/nested-stacks/" "${CURRENT_DIR}/dist"
+
 cp "${CURRENT_DIR}/build/lambda.zip" "${CURRENT_DIR}/dist"

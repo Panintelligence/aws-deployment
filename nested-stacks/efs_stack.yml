@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Encryption:
+    Type: String
+    Description: Enable Encryption for the FileSystem?  (Default - true)
+    ConstraintDescription: Must be a boolean value (true / false)
+    AllowedValues:
+      - true
+      - false
+    Default: true
+  FileSystemName:
+    Type: String
+    Description: >-
+      Name for tagging the EFS FileSystem (Default -
+      CloudFormationStackNameFileSystem)
+    Default: ' '
+
+Resources:
+  FileSystem:
+    Type: 'AWS::EFS::FileSystem'
+    Properties:
+      Encrypted: !Ref Encryption
+      FileSystemTags:
+        - Key: Name
+          Value: !Ref FileSystemName
+      PerformanceMode: generalPurpose
+
+
+  MountTargetDashboardA:
+    Type: 'AWS::EFS::MountTarget'
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId:
+        'Fn::ImportValue': PrivateSubnetA
+      SecurityGroups:
+        - 'Fn::ImportValue': EFSMountTarget
+
+  MountTargetDashboardB:
+    Type: 'AWS::EFS::MountTarget'
+    Properties:
+      FileSystemId: !Ref FileSystem
+      SubnetId:
+        'Fn::ImportValue': PrivateSubnetB
+      SecurityGroups:
+        - 'Fn::ImportValue': EFSMountTarget
+
+
+  AccessPointResource:
+    Type: 'AWS::EFS::AccessPoint'
+    Properties:
+      FileSystemId: !Ref FileSystem
+      PosixUser:
+        Uid: '0'
+        Gid: '0'
+      RootDirectory:
+        CreationInfo:
+          OwnerGid: '0'
+          OwnerUid: '0'
+          Permissions: '777'
+        Path: '/'
+
+Outputs:
+  FileSystem:
+    Description: The FileSystem reference
+    Value: !Ref FileSystem
+    Export:
+      Name: FileSystem
+
+  FileSystemArn:
+    Description: The FileSystem arn reference
+    Value: !GetAtt FileSystem.Arn
+    Export:
+      Name: FileSystemArn
+
+  AccessPointResource:
+    Description: The AccessPointResource arn reference
+    Value: !GetAtt AccessPointResource.Arn
+    Export:
+      Name: AccessPointResourceArn
