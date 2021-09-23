@@ -29,6 +29,8 @@ Resources:
     DeletionPolicy: Snapshot
     Type: 'AWS::RDS::DBInstance'
     Properties:
+      VPCSecurityGroups:
+        - !ImportValue RDSSecurityGroup
       Engine: mariadb
       DBParameterGroupName: !Ref RDSDBParameterGroup
       PubliclyAccessible: true

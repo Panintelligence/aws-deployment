@@ -50,7 +50,7 @@ Parameters:
       Name for tagging the EFS FileSystem (Default -
       CloudFormationStackNameFileSystem)
     Default: ' '
-  ACMCertArn:Looking
+  ACMCertArn:
     Type: String
     Description: Please obtain your ACM ARN that you wish to use on the load balancer for https
 Resources:

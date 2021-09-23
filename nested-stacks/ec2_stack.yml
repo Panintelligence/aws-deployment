@@ -1,0 +1,189 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+
+  AMIID:
+    Type: String
+    Description: AMI ID of the AMI
+  KeyPairName:
+    Type: String
+    Description: AMI ID of the AMI
+  DashboardLicenceKey:
+    Type: String
+    Description: The Dashboard licence key, please obtain that from Panintelligence account manager
+Resources:
+
+  # Create S3 backup IAM role and policy
+  PanintelligenceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: Panintelligence-IAM-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        # The managed IAM policy AmazonSSMManagedInstanceCore grants access to Session Manager
+        #- !Sub arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+  SecretPolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyName: panintelligence-secret
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - 'secretsmanager:GetResourcePolicy'
+              - 'secretsmanager:GetSecretValue'
+              - 'secretsmanager:DescribeSecret'
+              - 'secretsmanager:ListSecretVersionIds'
+            Resource:
+              - !ImportValue MyRDSSecret
+          - Effect: Allow
+            Action:
+              - 'secretsmanager:ListSecrets'
+            Resource:
+              - '*'
+      Roles:
+        - !Ref PanintelligenceRole
+
+  MyInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      Roles:
+        - !Ref PanintelligenceRole
+
+  PanintelligenceLaunchTemplate:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: !Ref AMIID
+      InstanceType: t3.medium
+      IamInstanceProfile: !Ref MyInstanceProfile
+      SecurityGroups:
+          - Fn::ImportValue: PrivateSecurityGroup
+          - Fn::ImportValue: SecurityGroupEc2Instance
+          - Fn::ImportValue: EFSMountTarget
+      KeyName: !Ref KeyPairName
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash -x
+              mkdir -p /mnt/efs/
+              chown pi-user:pi-group /mnt/efs/
+              echo "${EfsFileSystemId}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> /etc/fstab
+              mount -a -t nfs4
+              mkdir -p /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
+              touch /opt/pi/Dashboard/startup.sh
+              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
+              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
+              ln -s /mnt/efs/images /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
+              ln -s /mnt/efs/themes /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
+              ln -s /mnt/efs/excel-data /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
+              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
+              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
+              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
+              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
+              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
+              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
+              sed -i 's/cacheMaxSize="20000"/cacheMaxSize="20000" allowLinking="true"/g' /opt/pi/Dashboard/tomcat/conf/context.xml
+              chmod +rx /opt/pi/Dashboard/startup.sh
+              echo "#!/usr/bin/bash" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_HOST=${DBHost}" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region 'eu-west-1' | jq -r .password)" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_PORT=${DBPort}" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_SCHEMA_NAME='dashboard'" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_USERNAME=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region 'eu-west-1' | jq -r .username)" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_EXTERNAL_DB='true'" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_LICENCE='${DashboardLicenceKey}'" >> /opt/pi/Dashboard/startup.sh
+              echo "/opt/pi/Dashboard/dashboard.sh all start" >> /opt/pi/Dashboard/startup.sh
+              chown pi-user:pi-group /opt/pi/Dashboard/startup.sh
+              crontab -u pi-user -r
+              lines="@reboot /bin/bash /opt/pi/Dashboard/startup.sh"
+              echo "$lines" | crontab -u pi-user -
+              reboot
+            - EfsFileSystemId: !ImportValue FileSystem
+              DBHost: !ImportValue MyDBEndPoint
+              SecretArn: !ImportValue MyRDSSecret
+              DBPort: 3306
+              DashboardLicenceKey: !Ref DashboardLicenceKey
+
+
+
+  PanintelligenceAutoscalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+      - Fn::ImportValue: PrivateSubnetA
+      LaunchConfigurationName: !Ref PanintelligenceLaunchTemplate
+      MinSize: '1'
+      MaxSize: '5'
+      DesiredCapacity: '1'
+      HealthCheckGracePeriod: 300
+      MaxInstanceLifetime: 2592000
+      TargetGroupARNs:
+        - Fn::ImportValue: TargetGroup
+      Tags:
+        - Key: Name
+          Value: Panintelligence
+          PropagateAtLaunch: "true"
+
+  myScaleOutPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref PanintelligenceAutoscalingGroup
+      ScalingAdjustment: '1'
+
+  CPUAlarmHigh:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '1'
+      Statistic: Average
+      Threshold: '70'
+      AlarmDescription: Alarm if CPU too high or metric disappears indicating instance
+        is down
+      Period: '60'
+      AlarmActions:
+      - !Ref myScaleOutPolicy
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Ref: PanintelligenceAutoscalingGroup
+      ComparisonOperator: GreaterThanThreshold
+      MetricName: CPUUtilization
+
+  myScaleInPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: !Ref PanintelligenceAutoscalingGroup
+      ScalingAdjustment: '-1'
+
+  CPUAlarmLow:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '2'
+      Statistic: Average
+      Threshold: '10'
+      AlarmDescription: Alarm if CPU too low or metric disappears indicating instance
+        is down
+      Period: '60'
+      AlarmActions:
+      - !Ref myScaleInPolicy
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value:
+          Ref: PanintelligenceAutoscalingGroup
+      ComparisonOperator: LessThanThreshold
+      MetricName: CPUUtilization

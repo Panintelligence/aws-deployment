@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AMIID:
+    Type: String
+    Description: AMI ID of the AMI
+  KeyPairName:
+    Type: String
+    Description: AMI ID of the AMI
+  DashboardLicenceKey:
+    Type: String
+    Description: The Dashboard licence key, please obtain that from Panintelligence account manager
+Resources:
+  NestedEC2Call:
+    Type: 'AWS::CloudFormation::Stack'
+    Properties:
+      Parameters:
+        AMIID: !Ref AMIID
+        KeyPairName: !Ref KeyPairName
+        DashboardLicenceKey: !Ref DashboardLicenceKey
+      TemplateURL: !Sub 'https://${AWS::AccountId}-panintelligence-configuration.s3.${AWS::Region}.amazonaws.com/ec2_stack.yml'
+      TimeoutInMinutes: 60

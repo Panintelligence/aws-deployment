@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: 2010-09-09
+WSTemplateFormatVersion: 2010-09-09
 
 Parameters:
   VPCCidrBlock:
@@ -315,11 +315,7 @@ Resources:
           Value: !Sub '${AWS::StackName}-RDS-access'
       VpcId: !Ref VPC
       SecurityGroupIngress:
-        - CidrIp: !Ref PublicZoneACidrBlock
-          FromPort: 3306
-          IpProtocol: tcp
-          ToPort: 3306
-        - CidrIp: !Ref PublicZoneBCidrBlock
+        - CidrIp: !Ref VPCCidrBlock
           FromPort: 3306
           IpProtocol: tcp
           ToPort: 3306
@@ -439,7 +435,7 @@ Resources:
         - !Ref PrivateSubnetA
         - !Ref PrivateSubnetB
       SecurityGroupIds:
-        -  !Ref SecurityGroupEc2Instance
+        -  !Ref SecurityGroupVpcEndpoint
       VpcEndpointType: Interface
       ServiceName:
         Fn::Sub: com.amazonaws.${AWS::Region}.secretsmanager
@@ -614,3 +610,9 @@ Outputs:
     Value: !Ref SecurityGroupEc2Instance
     Export:
       Name: SecurityGroupEc2Instance
+      
+  RDSSecurityGroup:
+    Description: Panintelligence RDSSecurityGroup
+    Value: !Ref RDSSecurityGroup
+    Export:
+      Name: RDSSecurityGroup

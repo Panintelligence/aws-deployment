@@ -17,7 +17,7 @@ cd aws-deployment
 
 ## Setting the Parameters
 
-> PLEASE NOTE!  your s3 bucket name must be url safe! Also only use DASHBOARDLICENCEKEY if you are inputting your own licence key.
+> PLEASE NOTE! only use DASHBOARDLICENCEKEY if you are inputting your own licence key.
 
 ```bash
 VPCCIDRBLOCK=10.0.0.0/16
@@ -80,34 +80,27 @@ aws s3 cp dist/nested-stacks s3://${ACCOUNT_ID}-panintelligence-configuration --
 The next script is going to create our side load lambda function which is to help you move themes and images to customise your AWS Panintelligence system.
 
 ```bash
-aws cloudformation create-stack --stack-name PanintelligenceNestedStack --template-body file://panintelligence_nested_stack.yml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DashboardCidrBlockZoneA,ParameterValue=$DASHBOARDCIDRBLOCKA ParameterKey=DashboardCidrBlockZoneB,ParameterValue=$DASHBOARDCIDRBLOCKB ParameterKey=DBUserName,ParameterValue=$RDSUSERNAME ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPrivateA,ParameterValue=$RDSPRIVATEA ParameterKey=RDSPrivateB,ParameterValue=$RDSPRIVATEB ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
-./check_stack.sh PanintelligenceTwo
-```
-
-Now we're going to update the stack because of a circular dependency on the s3 bucket and lambda dependency (both need to be created before we can attach the trigger to the s3 bucket.)
-
-```bash
-aws cloudformation update-stack --stack-name PanintelligenceTwo --template-body file://panintelligence_nested_stack.yml --parameters ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME --capabilities CAPABILITY_NAMED_IAM
-./check_stack_update.sh PanintelligenceTwo
+aws cloudformation create-stack --stack-name PanintelligenceNestedStack --template-body file://panintelligence_nested_stack.yml --parameters ParameterKey=VPCCidrBlock,ParameterValue=$VPCCIDRBLOCK ParameterKey=PublicZoneACidrBlock,ParameterValue=$PUBLICZONEACIDRBLOCK ParameterKey=PublicZoneBCidrBlock,ParameterValue=$PUBLICZONEBCIDRBLOCK ParameterKey=DashboardCidrBlockZoneA,ParameterValue=$DASHBOARDCIDRBLOCKA ParameterKey=DashboardCidrBlockZoneB,ParameterValue=$DASHBOARDCIDRBLOCKB ParameterKey=DBUserName,ParameterValue=$RDSUSERNAME ParameterKey=DBName,ParameterValue=$DBNAME ParameterKey=RDSPrivateA,ParameterValue=$RDSPRIVATEA ParameterKey=RDSPrivateB,ParameterValue=$RDSPRIVATEB ParameterKey=Encryption,ParameterValue=$ENCRYPTION ParameterKey=FileSystemName,ParameterValue=$FILESYSTEMNAME ParameterKey=ACMCertArn,ParameterValue=$ACMCERTARN --capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
+./check_stack.sh PanintelligenceNestedStack
 ```
 
 We need to create some default themes for s3.  If you want to create your own, you can find instructions for this at www.panintelligence.com
 
 ```bash
-aws s3 cp resources/themes s3://panintelligence---${REGION}--${ACCOUNT_ID}/themes --recursive
-aws s3 cp resources/images s3://panintelligence---${REGION}--${ACCOUNT_ID}/images --recursive
+aws s3 cp resources/themes s3://${ACCOUNT_ID}-panintelligence-resources/themes --recursive
+aws s3 cp resources/images s3://${ACCOUNT_ID}-panintelligence-resources/images --recursive
 ```
 
 In the next step, we're going to create an autoscaling group and a launch configuration which will run a specified (default 1) number of Panintelligence instances inside your newly created infrastructure.
 ### If you are using a licence key, please use the script below: 
 
 ```bash
-aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue="${DASHBOARDLICENCEKEY}" --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://panintelligence_nested_ec2_stack.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue="${DASHBOARDLICENCEKEY}" --capabilities CAPABILITY_NAMED_IAM
 ./check_stack.sh PanintelligenceThree
 ```
 ### If you are not using a licence key, please use the script below:
 ```bash
-aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://infrastructure_setup_three_wol.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://panintelligence_nested_ec2_wol_stack.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME --capabilities CAPABILITY_NAMED_IAM
 ./check_stack.sh PanintelligenceThree
 ```
 
