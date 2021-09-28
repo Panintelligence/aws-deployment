@@ -60,12 +60,12 @@ aws ec2 create-key-pair --key-name $KEYPAIRNAME --query 'KeyMaterial' --output t
 
 This script will build the deployment package for the side load lambda function
 
-```
+```bash
 ./build_lambda.sh
 ```
 
 The first script builds a AWS S3 bucket to upload nested stacks and resources.
-``` bash
+```bash
 aws cloudformation create-stack --stack-name PanintelligenceConfig --template-body file://panintelligence_config.yml
 ./check_stack.sh PanintelligenceConfig
 ```
