@@ -421,8 +421,8 @@ Resources:
                 - 'arn:aws:s3:::${BucketName}/*'
                 - BucketName : !ImportValue 'S3BucketArn'
               - !ImportValue S3BucketArn
-              - 'arn:aws:s3:::624901044796-panintelligence-resources/*'
-              - 'arn:aws:s3:::624901044796-panintelligence-resources'
+              - !Sub 'arn:aws:s3:::${AWS::AccountId}-panintelligence-resources/*'
+              - !Sub 'arn:aws:s3:::${AWS::AccountId}-panintelligence-resources'
       RouteTableIds:
         - !Ref PrivateRouteTable
       ServiceName: !Sub 'com.amazonaws.${AWS::Region}.s3'
