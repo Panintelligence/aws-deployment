@@ -83,6 +83,7 @@ Resources:
       TargetType: 'AWS::RDS::DBInstance'
       SecretId: !Ref MyRDSSecret
       TargetId: !Ref MyRDSInstance
+
 Parameters:
   DBUserName:
     Type: String
