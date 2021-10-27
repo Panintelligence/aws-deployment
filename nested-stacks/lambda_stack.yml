@@ -6,6 +6,10 @@ Resources:
     DependsOn: S3InvokeLambdaPermission
     Properties:
       BucketName: !Sub '${AWS::AccountId}-panintelligence-resources'
+      BucketEncryption: 
+        ServerSideEncryptionConfiguration: 
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: AES256
       NotificationConfiguration:
         LambdaConfigurations:
           - Event: 's3:ObjectCreated:*'
