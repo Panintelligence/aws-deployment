@@ -98,10 +98,10 @@ Resources:
               chmod +rx /opt/pi/Dashboard/startup.sh
               echo "#!/usr/bin/bash" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_HOST=${DBHost}" >> /opt/pi/Dashboard/startup.sh
-              echo "export PI_DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region '${Region}' | jq -r .password)" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region ${Region} | jq -r .password)" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_PORT=${DBPort}" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_DB_SCHEMA_NAME='dashboard'" >> /opt/pi/Dashboard/startup.sh
-              echo "export PI_DB_USERNAME=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region '${Region}' | jq -r .username)" >> /opt/pi/Dashboard/startup.sh
+              echo "export PI_DB_USERNAME=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region ${Region} | jq -r .username)" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_EXTERNAL_DB='true'" >> /opt/pi/Dashboard/startup.sh
               echo "export PI_LICENCE='${DashboardLicenceKey}'" >> /opt/pi/Dashboard/startup.sh
               echo "/opt/pi/Dashboard/dashboard.sh all start" >> /opt/pi/Dashboard/startup.sh
