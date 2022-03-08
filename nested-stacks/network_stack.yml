@@ -446,6 +446,7 @@ Resources:
   # Create Application Load balancer
   ApplicationLoadBalancer:
         Type: "AWS::ElasticLoadBalancingV2::LoadBalancer"
+        DependsOn: InternetGateway
         Properties:
             Name: "Panintelligence"
             Scheme: "internet-facing"

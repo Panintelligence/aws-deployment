@@ -78,44 +78,43 @@ Resources:
             - |
               #!/bin/bash -x
               mkdir -p /mnt/efs/
-              chown pi-user:pi-group /mnt/efs/
               echo "${EfsFileSystemId}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> /etc/fstab
               mount -a -t nfs4
-              mkdir -p /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
-              touch /opt/pi/Dashboard/startup.sh
-              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
-              rm -r /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
-              ln -s /mnt/efs/images /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
-              ln -s /mnt/efs/themes /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
-              ln -s /mnt/efs/excel-data /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
-              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
-              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/excel-data
-              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
-              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/images
-              chown -h pi-user:pi-group /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
-              chmod +rwx /opt/pi/Dashboard/tomcat/webapps/panMISDashboardResources/themes
-              sed -i 's/cacheMaxSize="20000"/cacheMaxSize="20000" allowLinking="true"/g' /opt/pi/Dashboard/tomcat/conf/context.xml
-              chmod +rx /opt/pi/Dashboard/startup.sh
-              echo "#!/usr/bin/bash" >> /opt/pi/Dashboard/startup.sh
-              echo "export PI_DB_HOST=${DBHost}" >> /opt/pi/Dashboard/startup.sh
-              echo "export PI_DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region ${Region} | jq -r .password)" >> /opt/pi/Dashboard/startup.sh
-              echo "export PI_DB_PORT=${DBPort}" >> /opt/pi/Dashboard/startup.sh
-              echo "export PI_DB_SCHEMA_NAME='dashboard'" >> /opt/pi/Dashboard/startup.sh
-              echo "export PI_DB_USERNAME=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region ${Region} | jq -r .username)" >> /opt/pi/Dashboard/startup.sh
-              echo "export PI_EXTERNAL_DB='true'" >> /opt/pi/Dashboard/startup.sh
-              echo "export PI_LICENCE='${DashboardLicenceKey}'" >> /opt/pi/Dashboard/startup.sh
-              echo "/opt/pi/Dashboard/dashboard.sh all start" >> /opt/pi/Dashboard/startup.sh
-              chown pi-user:pi-group /opt/pi/Dashboard/startup.sh
-              crontab -u pi-user -r
-              lines="@reboot /bin/bash /opt/pi/Dashboard/startup.sh"
-              echo "$lines" | crontab -u pi-user -
+              rm -r /var/panintelligence/images
+              rm -r /var/panintelligence/themes
+              rm -r /var/panintelligence/excel
+              rm -r /var/panintelligence/keys
+              rm -r /var/panintelligence/logs
+              mkdir -p /mnt/efs/var/panintelligence/images /mnt/efs/var/panintelligence/themes /mnt/efs/var/panintelligence/excel /mnt/efs/var/panintelligence/logs /mnt/efs/var/panintelligence/keys
+              ln -s /mnt/efs/var/panintelligence/images /var/panintelligence/images
+              ln -s /mnt/efs/var/panintelligence/themes /var/panintelligence/themes
+              ln -s /mnt/efs/var/panintelligence/logs /var/panintelligence/logs
+              ln -s /mnt/efs/var/panintelligence/excel /var/panintelligence/excel
+              ln -s /mnt/efs/var/panintelligence/keys /var/panintelligence/keys
+              echo "PI_DB_HOST=${DBHost}" | tee -a /var/panintelligence/dashboard.env /var/panintelligence/scheduler.env
+              echo "PI_DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region ${Region} | jq -r .password)" | tee -a /var/panintelligence/dashboard.env /var/panintelligence/scheduler.env
+              echo "PI_DB_PORT=${DBPort}" | tee -a /var/panintelligence/dashboard.env /var/panintelligence/scheduler.env
+              echo "PI_DB_SCHEMA_NAME='dashboard'" | tee -a /var/panintelligence/dashboard.env /var/panintelligence/scheduler.env
+              echo "PI_DB_USERNAME=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region ${Region} | jq -r .username)" | tee -a /var/panintelligence/dashboard.env /var/panintelligence/scheduler.env
+              echo "PI_EXTERNAL_DB='true'" >> /var/panintelligence/dashboard.env
+              echo "PI_LICENCE='${DashboardLicenceKey}'" >> /var/panintelligence/dashboard.env
+              chmod +rwx /var/panintelligence/images
+              chmod +rwx /var/panintelligence/themes
+              chmod +rwx /var/panintelligence/logs
+              chmod +rwx /var/panintelligence/excel
+              chmod +rwx /var/panintelligence/keys
+              chown -h pi-user:pi-group /var/panintelligence/images
+              chown -h pi-user:pi-group /var/panintelligence/themes
+              chown -h pi-user:pi-group /var/panintelligence/logs
+              chown -h pi-user:pi-group /var/panintelligence/excel
+              chown -h pi-user:pi-group /var/panintelligence/keys
               reboot
             - EfsFileSystemId: !ImportValue FileSystem
               DBHost: !ImportValue MyDBEndPoint
               SecretArn: !ImportValue MyRDSSecret
               DBPort: 3306
               DashboardLicenceKey: !Ref DashboardLicenceKey
-              Region: ${AWS::Region}
+              Region: !Ref "AWS::Region"
 
 
 

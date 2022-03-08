@@ -82,14 +82,14 @@ def get_dir_from_object_key(object_key, separator='/'):
     logger.error('Could not find separator in %s', object_key)
     raise Exception(f'could not find separator {separator} in {object_key}')
 
-def copy_file(source_file, target_file_name):
+def copy_file(source_file, target_file_name, efs_source_path):
     '''copy the file from local system to efs volume'''
     logger.info('copying file from tmp to ')
     try:
         logger.info('copy_file target_file_name: %s', target_file_name)
         logger.info('copy_file source_file: %s', source_file)
         logger.info('efs local mount directory: %s', os.listdir("/mnt/efs"))
-        target_file = os.path.join(os.path.sep, 'mnt/efs', target_file_name)
+        target_file = os.path.join(os.path.sep, efs_source_path, target_file_name)
         try:
             os.makedirs(os.path.dirname(target_file), exist_ok=True)
             logger.info("Now copying files from %s to %s", source_file, target_file)
@@ -105,15 +105,16 @@ def copy_file(source_file, target_file_name):
         logger.error("Error when copying file into efs there is an empty directory")
         logger.error(type_error)
 
-def change_file_permission(target_file_name):
+def change_file_permission(target_file_name, efs_source_path):
     '''change the owner of the target file'''
-    target_file = os.path.join(os.path.sep, 'mnt/efs', target_file_name)
+    target_file = os.path.join(os.path.sep, efs_source_path, target_file_name)
     os.chmod(target_file, 0o777)
 
 class EfsTrigger:
     '''EFS lambda trigger code'''
     def __init__(self):
         self.s3_client = boto3.client('s3')
+        self.efs_source_path = os.getenv('efs_source_path','mnt/efs/var/panintelligence')
 
     def download_from_s3(self, bucket_name, object_name, target_file_name):
         '''download object from s3 to store on /tmp'''
@@ -141,8 +142,8 @@ class EfsTrigger:
             target_file_name = get_file_name_from_object_key(source_object_key)
             target_dir = get_dir_from_object_key(source_object_key)
             source_file = self.download_from_s3(source_bucket, source_object_key, target_file_name)
-            copy_file(source_file, target_dir)
-            change_file_permission(target_dir)
+            copy_file(source_file, target_dir, self.efs_source_path)
+            change_file_permission(target_dir, self.efs_source_path)
 
 def main():
     ''' initialising lambda function'''
