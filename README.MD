@@ -17,7 +17,7 @@ cd aws-deployment
 
 ## Setting the Parameters
 
-> PLEASE NOTE! only use DASHBOARDLICENCEKEY if you are inputting your own licence key.
+> PLEASE NOTE! Only use the BYOL_without_database image for this infrastructure set up.
 
 ```bash
 VPCCIDRBLOCK=10.0.0.0/16
@@ -43,7 +43,7 @@ ACCOUNT_ID=$(aws sts get-caller-identity --output text --query '[Account]')
 
 ### Making your licence key compatible
 
-Please ensure you remove all carriage return line feeds and leading white space from your licence.  It should fit entirely on one line.  If you're running a trial, developer or deploy version of Panintelligence, you will not need to supply this licence here as a licence is provided for you with the AMI.  More documentation can be found at www.panintelligence.com relating to this matter.
+Please ensure you remove all carriage return line feeds and leading white space from your licence.  It should fit entirely on one line. More documentation can be found at www.panintelligence.com relating to this matter.
 
 ## Creating your AWS Panintelligence instance
 
@@ -92,17 +92,12 @@ aws s3 cp resources/images s3://${ACCOUNT_ID}-panintelligence-resources/images -
 ```
 
 In the next step, we're going to create an autoscaling group and a launch configuration which will run a specified (default 1) number of Panintelligence instances inside your newly created infrastructure.
-### If you are using a licence key, please use the script below: 
 
 ```bash
 aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://panintelligence_nested_ec2_stack.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME ParameterKey=DashboardLicenceKey,ParameterValue="${DASHBOARDLICENCEKEY}" --capabilities CAPABILITY_NAMED_IAM
 ./check_stack.sh PanintelligenceThree
 ```
-### If you are not using a licence key, please use the script below:
-```bash
-aws cloudformation create-stack --stack-name PanintelligenceThree --template-body file://panintelligence_nested_ec2_wol_stack.yml --parameters ParameterKey=AMIID,ParameterValue=$AMIID ParameterKey=KeyPairName,ParameterValue=$KEYPAIRNAME --capabilities CAPABILITY_NAMED_IAM
-./check_stack.sh PanintelligenceThree
-```
+
 
 ## How to Clean up your AWS Marketplace Panintelligence 
 Please empty the S3 buckets before deleting the stacks. Beaware you are deleting the files inside the bucket, please make sure you have a backup of files.
@@ -115,12 +110,16 @@ Please ensure the stacks are deleted prior to running the next.  Please run thes
 
 ```bash
 aws cloudformation delete-stack --stack-name PanintelligenceThree
-aws cloudformation delete-stack --stack-name PanintelligenceTwo
-aws cloudformation delete-stack --stack-name PanintelligenceOne
+aws cloudformation delete-stack --stack-name PanintelligenceNestedStack
+aws cloudformation delete-stack --stack-name PanintelligenceConfig
 ```
 
+## How to migrate from previous cloudformation script
 
-
+within the nested-stacks folder you will need to change this environment variable default value to:
+```
+efs_source_path: 'mnt/efs'
+```
 
 
 
