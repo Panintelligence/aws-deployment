@@ -78,33 +78,39 @@ Resources:
               mkdir -p /mnt/efs/
               echo "${EfsFileSystemId}.efs.${AWS::Region}.amazonaws.com:/ /mnt/efs nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 0 0" >> /etc/fstab
               mount -a -t nfs4
+              sed -i "s+./panintelligence_init.sh+/var/panintelligence/panintelligence_init.sh+g" /etc/systemd/system/panintelligence.service
               rm -r /var/panintelligence/images
               rm -r /var/panintelligence/themes
               rm -r /var/panintelligence/excel
               rm -r /var/panintelligence/keys
               rm -r /var/panintelligence/logs
-              mkdir -p /mnt/efs/var/panintelligence/images /mnt/efs/var/panintelligence/themes /mnt/efs/var/panintelligence/excel /mnt/efs/var/panintelligence/logs /mnt/efs/var/panintelligence/keys
+              rm -r /var/panintelligence/svg
+              mkdir -p /mnt/efs/var/panintelligence/images /mnt/efs/var/panintelligence/themes /mnt/efs/var/panintelligence/excel /mnt/efs/var/panintelligence/logs /mnt/efs/var/panintelligence/keys /mnt/efs/var/panintelligence/svg
               ln -s /mnt/efs/var/panintelligence/images /var/panintelligence/images
               ln -s /mnt/efs/var/panintelligence/themes /var/panintelligence/themes
               ln -s /mnt/efs/var/panintelligence/logs /var/panintelligence/logs
               ln -s /mnt/efs/var/panintelligence/excel /var/panintelligence/excel
               ln -s /mnt/efs/var/panintelligence/keys /var/panintelligence/keys
+              ln -s /mnt/efs/var/panintelligence/svg /var/panintelligence/svg
               echo "PI_DB_HOST=${DBHost}" | tee -a /var/panintelligence/dashboard.env /var/panintelligence/scheduler.env
               echo "PI_DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region ${Region} | jq -r .password)" | tee -a /var/panintelligence/dashboard.env /var/panintelligence/scheduler.env
               echo "PI_DB_PORT=${DBPort}" | tee -a /var/panintelligence/dashboard.env /var/panintelligence/scheduler.env
               echo "PI_DB_SCHEMA_NAME='dashboard'" | tee -a /var/panintelligence/dashboard.env /var/panintelligence/scheduler.env
               echo "PI_DB_USERNAME=$(aws secretsmanager get-secret-value --secret-id ${SecretArn} --query SecretString --output text --region ${Region} | jq -r .username)" | tee -a /var/panintelligence/dashboard.env /var/panintelligence/scheduler.env
               echo "PI_EXTERNAL_DB='true'" >> /var/panintelligence/dashboard.env
+              echo "PI_LICENCE='${DashboardLicenceKey}'" >> /var/panintelligence/dashboard.env
               chmod +rwx /var/panintelligence/images
               chmod +rwx /var/panintelligence/themes
               chmod +rwx /var/panintelligence/logs
               chmod +rwx /var/panintelligence/excel
               chmod +rwx /var/panintelligence/keys
+              chmod +rwx /var/panintelligence/svg
               chown -h pi-user:pi-group /var/panintelligence/images
               chown -h pi-user:pi-group /var/panintelligence/themes
               chown -h pi-user:pi-group /var/panintelligence/logs
               chown -h pi-user:pi-group /var/panintelligence/excel
               chown -h pi-user:pi-group /var/panintelligence/keys
+              chown -h pi-user:pi-group /var/panintelligence/svg
               reboot
             - EfsFileSystemId: !ImportValue FileSystem
               DBHost: !ImportValue MyDBEndPoint
