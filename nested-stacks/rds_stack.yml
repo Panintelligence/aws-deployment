@@ -9,7 +9,7 @@ Resources:
         lower_case_table_names: 1
         log_bin_trust_function_creators: 1
       Description: Parameter group for panintelligence rds
-      Family: mariadb10.5
+      Family: mariadb10.6
   MyRDSInstance:
     DeletionPolicy: Snapshot
     Type: 'AWS::RDS::DBInstance'
