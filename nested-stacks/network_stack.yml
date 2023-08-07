@@ -29,6 +29,10 @@ Parameters:
     Type: String
     Default: 10.0.5.0/24
     Description: The subnet for RDS availibility b
+  NatPublicA:
+    Type: String
+    Default: 10.0.6.0/24
+    Description: The subnet for NAT gateway availibility a
   ACMCertArn:
     Type: String
     Description: Please obtain your ACM ARN that you wish to use on the load balancer for https
@@ -80,6 +84,17 @@ Resources:
         - Key: Name
           Value: !Sub '${AWS::StackName}-Public-B-Subnet-Zone-B'
 
+  PublicNatSubnetA:
+    Type: 'AWS::EC2::Subnet'
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock:
+        Ref: NatPublicA
+      AvailabilityZone: !Sub '${AWS::Region}a'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}-Public-Nat-Subnet-Zone-A'
+
   PrivateSubnetA:
     Type: 'AWS::EC2::Subnet'
     Properties:
@@ -124,6 +139,18 @@ Resources:
         - Key: Name
           Value: !Sub '${AWS::StackName}-rds-private-b'
 
+  # Create the NAT gateway
+  MyEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
+  MyNatGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt MyEIP.AllocationId
+      SubnetId: !Ref PublicNatSubnetA
+
   # Create the route tables
   PublicRouteTable:
     Type: 'AWS::EC2::RouteTable'
@@ -166,6 +193,12 @@ Resources:
       SubnetId: !Ref PublicSubnetB
       RouteTableId: !Ref PublicRouteTable
 
+  PublicNatSubnetBRouteTableAssociation:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Properties:
+      SubnetId: !Ref PublicNatSubnetA
+      RouteTableId: !Ref PublicRouteTable
+
   PrivateASubnetRouteTableAssociation:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Properties:
@@ -186,6 +219,14 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
+
+  PrivateRoute1:
+    Type: 'AWS::EC2::Route'
+    DependsOn: MyNatGateway
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref MyNatGateway
 
 
   # Create NACL
