@@ -129,7 +129,7 @@ Resources:
       - Fn::ImportValue: PrivateSubnetA
       LaunchConfigurationName: !Ref PanintelligenceLaunchTemplate
       MinSize: '1'
-      MaxSize: '5'
+      MaxSize: '1'
       DesiredCapacity: '1'
       HealthCheckGracePeriod: 300
       MaxInstanceLifetime: 2592000
